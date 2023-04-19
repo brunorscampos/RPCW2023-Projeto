@@ -1,5 +1,47 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  .w3-card-4
+    header.w3-container.w3-blue
+      h1 Acordãos
+    .w3-container
+      table.w3-table-all.w3-hoverable
+        thead
+          tr
+            th Processo
+            th Tribunal
+            th URL
+        
+        each acord in acords
+          tr.clickable(onclick="window.location='/acordaos/" + acord.tribunal + "/" + encodeURIComponent(acord.Processo) + "'" style="cursor:pointer;")
+            td #{acord.Processo}
+            td #{acord.tribunal}
+            td #{acord.url}
+      
+    .w3-bar.w3-border.w3-round(style="width: fit-content;margin: 0 auto;")
+      if page == 1
+        a.w3-button.w3-green(href="/acordaos/" + page) #{page}
+        a.w3-button(href="/acordaos/" + (page+1)) #{page+1}
+        a.w3-button(href="/acordaos/" + (page+2)) #{page+2}
+        a.w3-button(href="/acordaos/" + (page+3)) #{page+3}
+        a.w3-button(href="/acordaos/" + (page+4)) #{page+4}
+        a.w3-button.w3-right(href="/acordaos/" + (page+1)) Next &#10095;
+      else if page == 2
+        a.w3-button(href="/acordaos/" + (page-1)) &#10094; Previous
+        a.w3-button(href="/acordaos/" + (page-1)) #{page-1}
+        a.w3-button.w3-green(href="/acordaos/" + page) #{page}
+        a.w3-button(href="/acordaos/" + (page+1)) #{page+1}
+        a.w3-button(href="/acordaos/" + (page+2)) #{page+2}
+        a.w3-button(href="/acordaos/" + (page+3)) #{page+3}
+        a.w3-button.w3-right(href="/acordaos/" + (page+1)) Next &#10095;
+      else
+        a.w3-button(href="/acordaos/" + (page-1)) &#10094; Previous
+        a.w3-button(href="/acordaos/" + (page-2)) #{page-2}
+        a.w3-button(href="/acordaos/" + (page-1)) #{page-1}
+        a.w3-button.w3-green(href="/acordaos/" + page) #{page}
+        a.w3-button(href="/acordaos/" + (page+1)) #{page+1}
+        a.w3-button(href="/acordaos/" + (page+2)) #{page+2}
+        a.w3-button.w3-right(href="/acordaos/" + (page+1)) Next &#10095;
+
+    footer.w3-container.w3-blue.w3-center
+      h5 Generated for RPCW2023 in #{d}
