@@ -1,8 +1,8 @@
-var Acordao = require('../models/acordao')
+var Acordao = require('../models/acordao').acordaoModel
 
-// Acordao list
+// NAO ESTA A SER UTILIZADA (Tratado pela JQuery DataTable) !!!
 module.exports.list = () => {
-    return Acordao.acordaoModel.find()
+    return Acordao.find()
         .then(docs => {
             return docs
         })
@@ -11,8 +11,11 @@ module.exports.list = () => {
         })
 }
 
-module.exports.getAcordaoPage = (filter,page) => {
-    return Acordao.acordaoModel.find({},{Processo:1,tribunal:1,url:1}).skip(20*(page-1)).limit(20)
+// NAO ESTA A SER UTILIZADA (Tratado pela JQuery DataTable) !!!
+module.exports.getAcordaoPage = (filter,page,perPage) => {
+    // return Acordao.find(filter,{Processo:1,tribunal:1,url:1}).skip(perPage*(page-1)).limit(perPage)
+    rest = [{$project: {Processo: 1,tribunal: 1,url: 1}},{$skip: perPage * (page - 1)},{$limit: perPage}]
+    return Acordao.aggregate([...filter, ...rest])
         .then(docs => {
             return docs
         })
@@ -22,7 +25,7 @@ module.exports.getAcordaoPage = (filter,page) => {
 }
 
 module.exports.getAcordao = processo => {
-    return Acordao.acordaoModel.findOne({Processo:processo})
+    return Acordao.findOne({Processo:processo})
         .then(acordao => {
             return acordao
         })

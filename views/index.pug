@@ -1,47 +1,114 @@
 extends layout
 
 block content
+  style.
+    #myTable tbody tr:hover {
+      cursor: pointer;
+    }
+    #myTable td {
+      font-size: 12px; /* Adjust the font size to your preference */
+    }
+    .scrollable-text {
+      max-height: 150px; /* Set the desired height of the scrollable area */
+      overflow: auto; /* Enable scrolling when the content exceeds the height */
+    }
+  script(type="text/javascript").
+    function DisableNullFields() {
+      $('input').each(function(i) {
+          var $input = $(this);
+          if ($input.val() == '')
+          $input.attr('disabled', 'disabled');
+      });
+    }
   .w3-card-4
     header.w3-container.w3-blue
       h1 Acordãos
     .w3-container
-      table.w3-table-all.w3-hoverable
+      form(action='/acordaos' method='GET')
+        .w3-row
+          .w3-col.m2
+            label(for="keywords") Palavras-chave:
+            input.w3-input.w3-border(type='text' id='keywords' name='keywords' placeholder='Pesquisar...')
+          .w3-col.m2
+            label(for="tribunal") Tribunal:
+            select.w3-select.w3-border(name='tribunal')
+              option(value='' selected disabled) Escolher...
+              each trib in tribunais
+                option(value=trib.key) #{trib.nome}
+          .w3-col.m2
+            label(for="date_star") Depois de:
+            input.w3-input.w3-border(type='date' id='date_start' name='date_start' min="1900-01-01" max="2099-01-01")
+          .w3-col.m2
+            label(for="date_end") Antes de:
+            input.w3-input.w3-border(type='date' id='date_end' name='date_end' min="1900-01-01" max="2099-01-01")
+        input.w3-btn.w3-blue(type='submit' value='Filter' onclick='return DisableNullFields();')
+
+      table.w3-table-all.display(id="myTable")
         thead
           tr
             th Processo
             th Tribunal
-            th URL
-        
-        each acord in acords
-          tr.clickable(onclick="window.location='/acordaos/" + acord.tribunal + "/" + encodeURIComponent(acord.Processo) + "'" style="cursor:pointer;")
-            td #{acord.Processo}
-            td #{acord.tribunal}
-            td #{acord.url}
+            th Relator
+            th Data do Acordão
+            th Áreas Temáticas
+            th Descritores
+            th Sumário
+        tbody
       
-    .w3-bar.w3-border.w3-round(style="width: fit-content;margin: 0 auto;")
-      if page == 1
-        a.w3-button.w3-green(href="/acordaos/" + page) #{page}
-        a.w3-button(href="/acordaos/" + (page+1)) #{page+1}
-        a.w3-button(href="/acordaos/" + (page+2)) #{page+2}
-        a.w3-button(href="/acordaos/" + (page+3)) #{page+3}
-        a.w3-button(href="/acordaos/" + (page+4)) #{page+4}
-        a.w3-button.w3-right(href="/acordaos/" + (page+1)) Next &#10095;
-      else if page == 2
-        a.w3-button(href="/acordaos/" + (page-1)) &#10094; Previous
-        a.w3-button(href="/acordaos/" + (page-1)) #{page-1}
-        a.w3-button.w3-green(href="/acordaos/" + page) #{page}
-        a.w3-button(href="/acordaos/" + (page+1)) #{page+1}
-        a.w3-button(href="/acordaos/" + (page+2)) #{page+2}
-        a.w3-button(href="/acordaos/" + (page+3)) #{page+3}
-        a.w3-button.w3-right(href="/acordaos/" + (page+1)) Next &#10095;
-      else
-        a.w3-button(href="/acordaos/" + (page-1)) &#10094; Previous
-        a.w3-button(href="/acordaos/" + (page-2)) #{page-2}
-        a.w3-button(href="/acordaos/" + (page-1)) #{page-1}
-        a.w3-button.w3-green(href="/acordaos/" + page) #{page}
-        a.w3-button(href="/acordaos/" + (page+1)) #{page+1}
-        a.w3-button(href="/acordaos/" + (page+2)) #{page+2}
-        a.w3-button.w3-right(href="/acordaos/" + (page+1)) Next &#10095;
+      script.
+        $(document).ready(function () {
+          var dataTable = $('#myTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+              url: '/api/acordaos?!{query}', // !{query} forma de passar vars a blocos de script (unescaped interpolation)
+              type: 'GET',
+              dataSrc: 'data', 
+            },
+            columns: [
+              { data: 'Processo' },
+              { data: 'tribunal' },
+              { data: 'Relator', defaultContent: 'N/D' },
+              { data: 'Data do Acordão', defaultContent: 'N/D' },
+              {
+                data: null,
+                render: function (data, type, row) {
+                  var areas = []
+                  if (row['Área Temática']) areas.push(row['Área Temática'])
+                  if (row['Área Temática 1']) areas.push(row['Área Temática 1'])
+                  if (row['Área Temática 2']) areas.push(row['Área Temática 2'])
+                  var res = "N/D"
+                  if (areas.length > 0) res = areas.join(" / ")
+                  return '<div class="scrollable-text">' + res + "</div>"
+                }
+              },
+              { data: 'Descritores', defaultContent: 'N/D',
+                render: function ( data, type, row ) {
+                  var res = row['Descritores'] ? row['Descritores'].join(" / ") : "N/D"
+                  return '<div class="scrollable-text">' + row['Descritores'].join(" / ") + "</div>";
+                } 
+              },
+              { data: 'Sumário', defaultContent: 'N/D',
+                render: function ( data, type, row ) {
+                  var res = data ? data : "N/D"
+                  return '<div class="scrollable-text">' + res + "</div>";
+                } 
+              }
+            ],
+            responsive:true,
+            searching: false,
+            info: false
+          })
+
+          $('#myTable tbody').on('click', 'tr', function() {
+            var rowData = dataTable.row(this).data();
+            if (rowData !== undefined && rowData !== null) {
+              var processo = encodeURIComponent(rowData.Processo);
+              var tribunal = rowData.tribunal;
+              window.location.href = '/acordaos/' + tribunal + '/' + processo;
+            }
+          })
+        });
 
     footer.w3-container.w3-blue.w3-center
       h5 Generated for RPCW2023 in #{d}
