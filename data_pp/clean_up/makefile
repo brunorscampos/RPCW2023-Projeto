@@ -2,6 +2,9 @@
 # This is a C++ makefile.|
 # -----------//-----------
 
+# suppress leaving directory messages
+MAKEFLAGS 		+= --no-print-directory
+
 
 
 # whether or not to use precompiled headers (set to 'true' to use)
@@ -15,7 +18,7 @@ OBJ_DIR 		:= obj
 BIN_DIR 		:= bin
 
 
-INC_PATHS		:= include lib/nlohmann/include
+INC_PATHS		:= include lib/nlohmann/include lib/regex/include
 
 
 # files
@@ -38,6 +41,9 @@ BIN 			:= $(BIN_DIR)/a.out
 # compiler
 CXX 			:= clang++
 
+# archive-maintaining program
+AR 				:= ar -rcs
+
 # language standard to be used
 STD				:= c++20
 
@@ -46,10 +52,10 @@ CXXFLAGS 		:= -Wall -Wextra -Wsign-conversion -pedantic -pedantic-errors -std=$(
 CXXFLAGS        += $(foreach path,$(INC_PATHS),-I$(path))
 
 # linker flags (e.g. -L/path/to/lib)
-LDFLAGS			:=
+LDFLAGS			:= -Llib/regex/lib
 
 # linker libraries (e.g. -lm)
-LDLIBS			:=
+LDLIBS			:= -lboost_regex
 
 
 
@@ -76,10 +82,14 @@ debug: all
 
 
 
+export CXX AR
+
+
+
 # make default goal (using make with no specified recipe)
 .DEFAULT_GOAL := debug
 
-all: $(BIN)
+all: regex $(BIN)
 
 build: clean $(.DEFAULT_GOAL)
 
@@ -97,9 +107,12 @@ $(OBJ_FILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%
 $(PCH_INC_FILES): %.$(PCH_EXT) : %
 	$(CXX) $(CXXFLAGS) -x c++-header $< -o $@
 
+.PHONY: regex
+regex:
+	make -C lib/regex $(.DEFAULT_GOAL)
 
 # 'clean' doesn't represent an actual file generating recipe
 .PHONY: clean
-
 clean:
+	-make -C lib/regex clean
 	-rm -rf $(OBJ_DIR) $(BIN_DIR) $(PCH_INC_FILES)

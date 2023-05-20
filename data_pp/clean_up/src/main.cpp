@@ -1,5 +1,6 @@
 #include "json.hpp"
 #include "format.hpp"
+#include "boost/regex.hpp"
 
 #include <cstdio>
 #include <exception>
@@ -7,11 +8,10 @@
 #include <optional>
 #include <iostream>
 #include <string>
-#include <regex.h>
 
 
-static size_t constexpr DEFAULT_CHUNK_SIZE {8192};
-static std::string const DEFAULT_INPUT_REC_SEP {"    },"};
+static size_t constexpr DEFAULT_CHUNK_SIZE {4096};
+static std::string constexpr DEFAULT_INPUT_REC_SEP {"    },"};
 
 static std::array<std::string, 1> const REMOVABLE_KEYS {
     ""
@@ -62,15 +62,9 @@ static std::array<std::string, 43> const DATE_KEYS {
     "Ordenante Data do Movimento"
 };
 
-static char const* const DOCUMENT_PATTERN {"\\{(.|\n)*\\}"};
-static char const* const DATE_PATTERN {"^([[:digit:]]{2})/([[:digit:]]{2})/([[:digit:]]{4})$"};
-
-struct regex_t_deleter_t {
-    void operator()(regex_t* const r) const noexcept {
-        regfree(r);
-        delete r;
-    }
-};
+static char const* const DOCUMENT_PATTERN {"\\{.*\\}"};
+static char const* const DATE_PATTERN {"^\\s*(\\d{2})(/|-)(\\d{2})\\g2(\\d{4})\\s*$"};
+static char const* const INDENT_PATTERN {"\n"};
 
 struct FILE_deleter_t {
     void operator()(FILE* const f) const noexcept {
@@ -91,7 +85,7 @@ public:
     document_stream_t(
         std::string input_rec_sep,
         std::string const& fn,
-        std::shared_ptr<regex_t> doc_regex_obj,
+        std::shared_ptr<boost::regex> doc_regex_obj,
         size_t const chunk_size = DEFAULT_CHUNK_SIZE
     ) :
         m_input_rec_sep{std::move(input_rec_sep)},
@@ -110,9 +104,31 @@ public:
             this->read_chunk();
         }
 
-    std::optional<nlohmann::json> next_document(){
+    document_stream_t(
+        std::string input_rec_sep,
+        std::string const& fn,
+        std::shared_ptr<boost::regex> doc_regex_obj,
+        std::unique_ptr<char, c_mem_deleter_t> buffer,
+        size_t const capacity,
+        size_t const chunk_size = DEFAULT_CHUNK_SIZE
+    ) :
+        m_input_rec_sep{std::move(input_rec_sep)},
+        m_ifh{std::unique_ptr<std::FILE, FILE_deleter_t>{std::fopen(fn.c_str(), "r")}},
+        m_chunk_size{chunk_size},
+        m_buffer_capacity{capacity},
+        m_buffer_size{0},
+        m_buffer{std::move(buffer)},
+        m_doc_regex_obj{std::move(doc_regex_obj)}
+        {
+            if(m_ifh.get() == nullptr)
+                throw std::ios::failure{
+                    string_format("IO error: failed to open file '%s'", fn.c_str())
+                };
 
-        static std::string document_buffer {};
+            this->read_chunk();
+        }
+
+    std::optional<nlohmann::json> next_document(){
 
         char* pos {nullptr};
         do {
@@ -127,29 +143,21 @@ public:
             pos[m_input_rec_sep.size()] = '\0';
         }
 
-        std::array<regmatch_t, 1> match_obj {};
-        if(
-            regexec(
-                m_doc_regex_obj.get(),
-                m_buffer.get(),
-                match_obj.size(),
-                match_obj.data(),
-                0
-            ) != 0
-        )
+        boost::cmatch match_obj {};
+        if(!boost::regex_search(m_buffer.get(), match_obj, *m_doc_regex_obj))
             return std::nullopt;
 
         if(pos != nullptr)
             pos[m_input_rec_sep.size()] = char_at_pos;
 
-        char const char_at_rm_eo {m_buffer.get()[match_obj[0].rm_eo]};
-        m_buffer.get()[match_obj[0].rm_eo] = '\0';
-        document_buffer = m_buffer.get() + match_obj[0].rm_so;
-        m_buffer.get()[match_obj[0].rm_eo] = char_at_rm_eo;
+        m_document_buffer = {match_obj[0].begin(), match_obj[0].end()};
 
+        this->adjust_buffer(const_cast<char*>(match_obj[0].end()));
+        return std::make_optional(nlohmann::json::parse(m_document_buffer));
+    }
 
-        this->adjust_buffer(m_buffer.get() + match_obj[0].rm_eo);
-        return std::make_optional(nlohmann::json::parse(document_buffer));
+    std::pair<std::unique_ptr<char, c_mem_deleter_t>, size_t> release_buffer() noexcept {
+        return std::make_pair(std::move(m_buffer), m_buffer_capacity);
     }
 
 private:
@@ -159,7 +167,10 @@ private:
     size_t m_buffer_capacity;
     size_t m_buffer_size;
     std::unique_ptr<char, c_mem_deleter_t> m_buffer;
-    std::shared_ptr<regex_t> const m_doc_regex_obj;
+    std::shared_ptr<boost::regex> const m_doc_regex_obj;
+
+    static std::string m_document_buffer;
+
 
     size_t read_chunk(){
         if(!this->resize_buffer())
@@ -225,33 +236,41 @@ private:
     }
 };
 
+std::string document_stream_t::m_document_buffer {};
+
+
 static void delete_keys(nlohmann::json& json_obj){
     for(std::string const& k : REMOVABLE_KEYS)
         json_obj.erase(k);
 }
 
-static void normalize_dates(nlohmann::json& json_obj, regex_t const* const regex_obj){
-    static std::array<regmatch_t, 4> match_obj {};
+static void normalize_dates(nlohmann::json& json_obj, boost::regex const& regex_obj){
+
+    static boost::cmatch match_obj {};
 
     for(std::string const& k : DATE_KEYS)
 
         if(json_obj.contains(k) && json_obj[k].is_string()){
 
             std::string const& value {json_obj[k]};
-            if(regexec(regex_obj, value.c_str(), match_obj.size(), match_obj.data(), 0) != 0)
+            if(!boost::regex_search(value.c_str(), match_obj, regex_obj))
                 std::cerr << string_format(
                     "'%s' doesn't match the DD/MM/YYYY format (@ key '%s'); skipping...\n",
                     value.c_str(), k.c_str()
                 );
             else {
                 json_obj[k] = string_format(
-                    "%.4s-%.2s-%.2s", 
-                    value.c_str() + match_obj[3].rm_so,
-                    value.c_str() + match_obj[2].rm_so,
-                    value.c_str() + match_obj[1].rm_so
+                    "%.4s-%.2s-%.2s",
+                    match_obj[4].begin(),
+                    match_obj[3].begin(),
+                    match_obj[1].begin()
                 );
             }
         }
+}
+
+static void prettify(std::string& str, boost::regex const& regex_obj){
+    str = boost::regex_replace(str, regex_obj, "\n\t");
 }
 
 int main(int const argc, char const* const* const argv){
@@ -261,22 +280,40 @@ int main(int const argc, char const* const* const argv){
         return 1;
     }
 
-    std::shared_ptr<regex_t> const doc_regex_obj {new regex_t{}, regex_t_deleter_t{}};
-    if(regcomp(doc_regex_obj.get(), DOCUMENT_PATTERN, REG_EXTENDED) != 0)
-        throw std::runtime_error{
-            string_format("Failed to compile regex pattern '{}'", DOCUMENT_PATTERN)
-        };
+    std::shared_ptr<boost::regex> const doc_regex_obj {
+        std::make_shared<boost::regex>(
+            DOCUMENT_PATTERN,
+            boost::regex::perl | boost::regex::mod_s
+        )
+    };
 
-    std::unique_ptr<regex_t, regex_t_deleter_t> const date_regex_obj {new regex_t{}};
-    if(regcomp(date_regex_obj.get(), DATE_PATTERN, REG_EXTENDED) != 0)
-        throw std::runtime_error{
-            string_format("Failed to compile regex pattern '{}'", DATE_PATTERN)
-        };
+    boost::regex const date_regex_obj {
+        DATE_PATTERN,
+        boost::regex::perl | boost::regex::no_mod_m
+    };
+
+    boost::regex const indent_regex_obj {
+        INDENT_PATTERN,
+        boost::regex::perl
+    };
 
     int status {0};
+    std::unique_ptr<char, c_mem_deleter_t> buffer {nullptr};
+    size_t capacity {0};
+
     for(int i {1}; i < argc; ++i){
         try {
-            document_stream_t doc_stream {DEFAULT_INPUT_REC_SEP, argv[i], doc_regex_obj};
+            document_stream_t doc_stream {
+                i == 1 ?
+                    document_stream_t{DEFAULT_INPUT_REC_SEP, argv[i], doc_regex_obj} :
+                    document_stream_t{
+                        DEFAULT_INPUT_REC_SEP,
+                        argv[i],
+                        doc_regex_obj,
+                        std::move(buffer),
+                        capacity
+                    }
+            };
 
             std::string const out_fn {string_format("%s.new", argv[i])};
             std::unique_ptr<std::FILE, FILE_deleter_t> const out_fh {
@@ -287,7 +324,7 @@ int main(int const argc, char const* const* const argv){
                     string_format("IO error: failed to open file '%s'", out_fn.c_str())
                 };
 
-            std::fwrite("[\n", sizeof(char), 2, out_fh.get());
+            std::fwrite("[\n\t", sizeof(char), 3, out_fh.get());
             bool is_first {true};
 
             for(
@@ -297,13 +334,14 @@ int main(int const argc, char const* const* const argv){
             ){
 
                 delete_keys(j.value());
-                normalize_dates(j.value(), date_regex_obj.get());
+                normalize_dates(j.value(), date_regex_obj);
 
                 if(!is_first)
-                    std::fwrite(",\n", sizeof(char), 2, out_fh.get());
+                    std::fwrite(",\n\t", sizeof(char), 3, out_fh.get());
                 is_first = false;
-                
-                std::string const j_as_str {j.value().dump(4)};
+
+                std::string j_as_str {j.value().dump(4)};
+                prettify(j_as_str, indent_regex_obj);
                 std::fwrite(
                     j_as_str.c_str(),
                     sizeof(*j_as_str.c_str()),
@@ -312,6 +350,10 @@ int main(int const argc, char const* const* const argv){
                 );
             }
             std::fwrite("\n]\n", sizeof(char), 3, out_fh.get());
+
+            auto&& [r_buffer, r_capacity] {doc_stream.release_buffer()};
+            buffer = std::move(r_buffer);
+            capacity = r_capacity;
         }
         catch(std::exception const& e){
             std::cerr << e.what() << '\n';

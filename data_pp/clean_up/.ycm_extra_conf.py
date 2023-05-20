@@ -9,6 +9,7 @@ def Settings(** kwargs) -> dict:
             '-Iinclude',
             '-Ilib/tiny_obj_loader/include',
             '-Ilib/nlohmann/include',
+            '-Ilib/regex/include',
             '-std=c++20'
         ]
     }
