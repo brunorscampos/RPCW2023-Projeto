@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  .w3-card-4
+    header.w3-container.w3-blue
+      h1 Processo: #{acord['Processo']}
+    .w3-container
+      each val, key in acord
+        if Array.isArray(val)
+          p
+            b #{key}
+          ul
+            each v in val
+              li
+                p #{v} 
+        else if !["_id","id","Processo"].includes(key)
+          p
+            b #{key}:
+            |  #{val}
+    footer.w3-container.w3-blue.w3-center
+      h5 Generated for RPCW2023 in #{d}

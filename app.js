@@ -4,7 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose')
-var mongoDB = "mongodb://127.0.0.1/justice"
+var mongoDB = "mongodb://127.0.0.1/RPCW_TP"
 
 mongoose.connect(mongoDB,{useNewUrlParser: true, useUnifiedTopology: true})
 
