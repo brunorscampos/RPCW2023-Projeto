@@ -81,8 +81,7 @@ debug: all
 
 all: $(BIN)
 
-rbuild: clean release
-dbuild: clean debug
+build: clean $(.DEFAULT_GOAL)
 
 $(BIN): $(PCH_INC_FILES) $(OBJ_FILES)
 	@mkdir -p $(@D)
