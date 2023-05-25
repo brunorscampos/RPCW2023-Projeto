@@ -1,0 +1,118 @@
+# -----------//-----------
+# This is a C++ makefile.|
+# -----------//-----------
+
+# suppress leaving directory messages
+MAKEFLAGS 		+= --no-print-directory
+
+
+
+# whether or not to use precompiled headers (set to 'true' to use)
+USE_PCH			:= false
+
+
+
+# directories
+SRC_DIR 		:= src
+OBJ_DIR 		:= obj
+BIN_DIR 		:= bin
+
+
+INC_PATHS		:= include lib/nlohmann/include lib/regex/include
+
+
+# files
+SRC_FILES 		:= $(shell find $(SRC_DIR) -name "*.cpp" -o \
+                                           -name "*.cxx" -o \
+										   -name "*.c++" -o \
+										   -name "*.cc")
+OBJ_FILES		:= $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%.o,$(SRC_FILES))
+INC_FILES 		:= $(shell find $(INC_PATH) -name "*.hpp" -o \
+										    -name "*.hxx" -o \
+										    -name "*.h++" -o \
+										    -name "*.hh"  -o \
+										    -name "*.h")
+PCH_INC_FILES 	:=
+
+BIN 			:= $(BIN_DIR)/a.out
+
+
+
+# compiler
+CXX 			:= clang++
+
+# archive-maintaining program
+AR 				:= ar -rcs
+
+# language standard to be used
+STD				:= c++20
+
+# compiler flags
+CXXFLAGS 		:= -Wall -Wextra -Wsign-conversion -pedantic -pedantic-errors -std=$(STD)
+CXXFLAGS        += $(foreach path,$(INC_PATHS),-I$(path))
+
+# linker flags (e.g. -L/path/to/lib)
+LDFLAGS			:= -Llib/regex/lib
+
+# linker libraries (e.g. -lm)
+LDLIBS			:= -lboost_regex
+
+
+
+ifeq (true, $(USE_PCH))
+
+	ifeq (gcc, $(CXX))
+		PCH_EXT 	:= gch
+	else
+		PCH_EXT 	:= pch
+	endif
+
+	PCH_INC_FILES 	+= $(patsubst %,%.$(PCH_EXT),$(INC_FILES))
+
+endif
+
+
+
+# profiles
+release: CXXFLAGS += -O2 -DNDEBUG
+release: all
+
+debug: CXXFLAGS += -O0 -g -fsanitize=address
+debug: all
+
+
+
+export CXX AR
+
+
+
+# make default goal (using make with no specified recipe)
+.DEFAULT_GOAL := release
+
+all: regex $(BIN)
+
+build: clean $(.DEFAULT_GOAL)
+
+$(BIN): $(PCH_INC_FILES) $(OBJ_FILES)
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(filter %.o,$^) -o $@ $(LDFLAGS) $(LDLIBS)
+
+# generate each object file according to the corresponding source file
+# create directories as needed
+# https://www.gnu.org/software/make/manual/make.html# Static-Pattern
+$(OBJ_FILES): $(OBJ_DIR)/%.o : $(SRC_DIR)/%
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(PCH_INC_FILES): %.$(PCH_EXT) : %
+	$(CXX) $(CXXFLAGS) -x c++-header $< -o $@
+
+.PHONY: regex
+regex:
+	make -C lib/regex $(.DEFAULT_GOAL)
+
+# 'clean' doesn't represent an actual file generating recipe
+.PHONY: clean
+clean:
+	-make -C lib/regex clean
+	-rm -rf $(OBJ_DIR) $(BIN_DIR) $(PCH_INC_FILES)
