@@ -49,19 +49,34 @@ router.get('/api/acordaos', function(req, res, next) {
   //const sortOrder = req.query.sortOrder || 'asc';
   const tribunal = req.query.tribunal
   const keywords = req.query.keywords
+  const processo = req.query.processo
+  const relator = req.query.relator
   const date_start = req.query.date_start
   const date_end = req.query.date_end
   var filter = {}
+  var projection = {Processo: 1,tribunal: 1,Relator: 1,"Data do Acordão":1,"Área Temática":1,
+                    "Área Temática 1":1,"Área Temática 2":1,Descritores:1,Sumário:1}
+
   if (tribunal) filter.tribunal = tribunal
-  if (keywords) filter.$text = { $search: keywords }
+  if (keywords) {
+    const searchkeywords = keywords.split(" ").map(word => `"${word}"`).join(" ");
+    filter.$text = { $search: searchkeywords, $language: "pt" }
+  }
+  if (processo) filter.Processo = { $regex: processo, $options: 'i' }
+  if (relator) {
+    var regexConditions = relator.split(" ").map(function(word) {
+      return { Relator: { $regex: word, $options: 'i' } };
+    });
+    filter.$and = regexConditions 
+  }
   if (date_start) filter["Data do Acordão"] = { $gt: date_start }
   if (date_end) {
     if (filter["Data do Acordão"]) filter["Data do Acordão"].$lt = date_end
     else filter["Data do Acordão"] = { $lt: date_end }
   }
-  var projection = {Processo: 1,tribunal: 1,Relator: 1,"Data do Acordão":1,"Área Temática":1,
-                    "Área Temática 1":1,"Área Temática 2":1,Descritores:1,Sumário:1}
 
+  console.log(filter)
+  
   acordaoModel.estimatedDocumentCount(filter).then(recordsTotal =>{
     const skip = (page - 1) * pageSize;
     const limit = pageSize;
