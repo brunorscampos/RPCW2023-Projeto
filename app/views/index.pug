@@ -27,20 +27,26 @@ block content
       form(action='/acordaos' method='GET')
         .w3-row
           .w3-col.m2
-            label(for="keywords") Palavras-chave:
-            input.w3-input.w3-border(type='text' id='keywords' name='keywords' placeholder='Pesquisar...')
-          .w3-col.m2
             label(for="tribunal") Tribunal:
             select.w3-select.w3-border(name='tribunal')
               option(value='' selected disabled) Escolher...
               each trib in tribunais
                 option(value=trib.key) #{trib.nome}
           .w3-col.m2
-            label(for="date_star") Depois de:
+            label(for="date_star") Data Superior a:
             input.w3-input.w3-border(type='date' id='date_start' name='date_start' min="1900-01-01" max="2099-01-01")
           .w3-col.m2
-            label(for="date_end") Antes de:
+            label(for="date_end") Data Inferior a:
             input.w3-input.w3-border(type='date' id='date_end' name='date_end' min="1900-01-01" max="2099-01-01")
+          .w3-col.m2
+            label(for="keywords") Palavras-chave:
+            input.w3-input.w3-border(type='text' id='keywords' name='keywords' placeholder='Pesquisa Livre...')
+          .w3-col.m2
+            label(for="processo") Processo:
+            input.w3-input.w3-border(type='text' id='processo' name='processo' placeholder='Nº de Processo...')
+          .w3-col.m2
+            label(for="relator") Relator:
+            input.w3-input.w3-border(type='text' id='relator' name='relator' placeholder='Pesquisar por Relator...')
         input.w3-btn.w3-blue(type='submit' value='Filter' onclick='return DisableNullFields();')
 
       table.w3-table-all.display(id="myTable")
