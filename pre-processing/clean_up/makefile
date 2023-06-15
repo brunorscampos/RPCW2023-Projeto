@@ -48,7 +48,7 @@ AR 				:= ar -rcs
 STD				:= c++20
 
 # compiler flags
-CXXFLAGS 		:= -Wall -Wextra -Wsign-conversion -pedantic -pedantic-errors -std=$(STD)
+CXXFLAGS 		:= -Wall -Wextra -Wsign-conversion -pedantic -pedantic-errors -std=$(STD) -g3 -ggdb
 CXXFLAGS        += $(foreach path,$(INC_PATHS),-I$(path))
 
 # linker flags (e.g. -L/path/to/lib)
@@ -77,7 +77,7 @@ endif
 release: CXXFLAGS += -O2 -DNDEBUG
 release: all
 
-debug: CXXFLAGS += -O0 -g -fsanitize=address
+debug: CXXFLAGS += -O0 -fsanitize=address
 debug: all
 
 
