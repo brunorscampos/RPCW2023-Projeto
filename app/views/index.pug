@@ -20,18 +20,16 @@ block content
           $input.attr('disabled', 'disabled');
       });
     }
+  script(type="text/javascript").
+    $(document).ready(function() {
+      $('.js-tribunal-multiple').select2();
+    });
   .w3-card-4
     header.w3-container.w3-blue
       h1 Acordãos
     .w3-container
       form(action='/acordaos' method='GET')
         .w3-row
-          .w3-col.m2
-            label(for="tribunal") Tribunal:
-            select.w3-select.w3-border(name='tribunal')
-              option(value='' selected disabled) Escolher...
-              each trib in tribunais
-                option(value=trib.key) #{trib.nome}
           .w3-col.m2
             label(for="date_star") Data Superior a:
             input.w3-input.w3-border(type='date' id='date_start' name='date_start' min="1900-01-01" max="2099-01-01")
@@ -47,6 +45,15 @@ block content
           .w3-col.m2
             label(for="relator") Relator:
             input.w3-input.w3-border(type='text' id='relator' name='relator' placeholder='Pesquisar por Relator...')
+        .w3-row
+          .w3-col.m2
+            label(for="descritores") Descritores:
+            input.w3-input.w3-border(type='text' id='descritores' name='descritores' placeholder='Pesquisar por Descritores...')
+          .w3-col.m2
+            label(for="tribunal") Tribunal:
+            select.w3-select.w3-border.js-tribunal-multiple(name='tribunal' multiple="multiple" placeholder='Pesquisa Livre...')
+              each trib in tribunais
+                option(value=trib.key) #{trib.nome}
         input.w3-btn.w3-blue(type='submit' value='Filter' onclick='return DisableNullFields();')
 
       table.w3-table-all.display(id="myTable")

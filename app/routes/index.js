@@ -43,31 +43,42 @@ router.get('/acordaos/:tribunal/:processo', function(req, res, next) {
 });
 
 router.get('/api/acordaos', function(req, res, next) {
-  const page = parseInt(req.query.start) || 1;
-  const pageSize = parseInt(req.query.length) || 25;
+  const start = parseInt(req.query.start) || 0
+  const pageSize = parseInt(req.query.length) || 10
   //const sortField = req.query.sortField || 'Processo';
   //const sortOrder = req.query.sortOrder || 'asc';
-  const tribunal = req.query.tribunal
+  var tribunal = req.query.tribunal
   const keywords = req.query.keywords
   const processo = req.query.processo
   const relator = req.query.relator
+  const descritores = req.query.descritores
   const date_start = req.query.date_start
   const date_end = req.query.date_end
+
   var filter = {}
   var projection = {Processo: 1,tribunal: 1,Relator: 1,"Data do Acordão":1,"Área Temática":1,
                     "Área Temática 1":1,"Área Temática 2":1,Descritores:1,Sumário:1}
 
-  if (tribunal) filter.tribunal = tribunal
+  if (tribunal){
+    if (typeof tribunal === 'string') tribunal = [tribunal]
+    filter.tribunal = {$in: tribunal}
+  }
   if (keywords) {
     const searchkeywords = keywords.split(" ").map(word => `"${word}"`).join(" ");
     filter.$text = { $search: searchkeywords, $language: "pt" }
   }
   if (processo) filter.Processo = { $regex: processo, $options: 'i' }
   if (relator) {
-    var regexConditions = relator.split(" ").map(function(word) {
+    var relatorRegexConditions = relator.split(" ").map(function(word) {
       return { Relator: { $regex: word, $options: 'i' } };
     });
-    filter.$and = regexConditions 
+    filter.$and = relatorRegexConditions 
+  }
+  if (descritores) {
+    var descritoresRegexConditions = descritores.split(" ").map(function(word) {
+      return { Descritores: { $regex: word, $options: 'i' } };
+    });
+    filter.$and = descritoresRegexConditions 
   }
   if (date_start) filter["Data do Acordão"] = { $gt: date_start }
   if (date_end) {
@@ -76,10 +87,12 @@ router.get('/api/acordaos', function(req, res, next) {
   }
 
   console.log(filter)
+  console.log(projection)
   
   acordaoModel.estimatedDocumentCount(filter).then(recordsTotal =>{
-    const skip = (page - 1) * pageSize;
-    const limit = pageSize;
+    const skip = start
+    const limit = pageSize
+    const page = (skip / limit) + 1 
     acordaoModel.find(filter,projection)//.sort({ [sortField]: sortOrder })
                 .skip(skip).limit(limit).then(acordaos => {
       const response = {
