@@ -1,0 +1,1 @@
+sed 's/\b\(de\|a\|do\|da\|o\|ou\|e\|dos\|das\|para\|por\|como\|com\|em\|um\|uma\|pelo\|pela\|as\|os\|ao\|desse\no\|na\|nos\|nas\|à\|às\|á\|ás\|seu\|sua\|seus\|suas\|pelos\|pelas\|sobre\|dessa\|desses\|dessas\|NO\)\b//gi' remove-accentsupper.txt | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | uniq -u | sort | awk '{print $1, $2}' | uniq -u | sort > first2words.txt
