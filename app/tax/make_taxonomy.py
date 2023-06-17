@@ -24,5 +24,7 @@ with open('first2words3.txt', 'r') as file:
             main_id = id
             collection.insert_one({"_id": main_id, "name": main_word, "parent": None, "acordaos": []})
             id += 1
+        if id % 200 == 0:
+            print(id)
 
 client.close()

@@ -36,6 +36,7 @@ for doc in data:
                 {"_id": doc["_id"]},
                 {"$push": {"acordaos": {"$each": acordaos}}}
             )
-    print(doc["_id"])
+    if doc["_id"] % 200 == 0:
+        print(doc["_id"])
 
 client.close()

@@ -57,7 +57,7 @@ function checkTaxonomy(req, res, next) {
         filter2.parent = taxonomia._id
 
         taxonomiaModel.findOne(filter2,projection2).then(taxonomia2 => {
-          descritoresList = (taxonomia2) ? taxonomia2.acordaos : null
+          descritoresList = (taxonomia2) ? taxonomia2.acordaos : []
           next();
         })
         .catch(erro => {
@@ -66,7 +66,7 @@ function checkTaxonomy(req, res, next) {
         });
       }
       else{
-        descritoresList = (taxonomia) ? taxonomia.acordaos : null
+        descritoresList = (taxonomia) ? taxonomia.acordaos : []
         next();
       }
     })
@@ -152,7 +152,10 @@ router.get('/api/acordaos', function(req, res, next) {
     filter.$and = descritoresRegexConditions 
   }
   */
-  if (descritores) filter.url = { $in: descritores }
+  if (descritores) {
+    if (descritores.length == 0) res.jsonp({recordsTotal: 0,recordsFiltered: 0,start: 1,length: pageSize,data: []});
+    filter.url = { $in: descritores }
+  }
   if (date_start) filter["Data do Acordão"] = { $gt: date_start }
   if (date_end) {
     if (filter["Data do Acordão"]) filter["Data do Acordão"].$lt = date_end
