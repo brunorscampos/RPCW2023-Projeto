@@ -1,2 +1,6 @@
 node_modules
 datasets
+misc
+package-lock.json
+descs.json
+filled_descs.json
