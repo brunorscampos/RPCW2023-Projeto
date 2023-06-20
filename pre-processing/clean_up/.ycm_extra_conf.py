@@ -6,7 +6,7 @@ def Settings(** kwargs) -> dict:
             '-Wextra',
             '-Wsign-conversion',
             '-pedantic-errors',
-            '-Iinclude',
+            '-Isrc',
             '-Ilib/tiny_obj_loader/include',
             '-Ilib/nlohmann/include',
             '-Ilib/regex/include',
