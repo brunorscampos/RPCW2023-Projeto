@@ -3,14 +3,41 @@ const querystring = require('querystring');
 var router = express.Router();
 var acordaoController = require('../controllers/acordao')
 var acordaoModel = require('../models/acordao').acordaoModel
+var userModel = require('../models/users').userModel
+var passport = require('passport')
+var jwt = require('jsonwebtoken')
+
+function verificaAcesso(req, res, next){
+  var myToken = req.query.token || req.body.token
+  if(myToken){
+    jwt.verify(myToken, "tprpcw", function(e, payload){
+      if(e){ 
+        //res.status(401).jsonp({error: e})
+        req.authStatus = false
+        next()
+      }
+      else{
+        req.authStatus = true
+        next()
+      }
+    })
+  }
+  else{
+    //res.status(401).jsonp({error: "Token inexistente!"})
+    req.authStatus = false
+    next()
+  }
+}
+
+
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', verificaAcesso, function(req, res, next) {
   res.redirect('/acordaos')
 });
 
 /* GET page. */
-router.get('/acordaos', function(req, res, next) {
+router.get('/acordaos', verificaAcesso, function(req, res, next) {
   var data = new Date().toISOString().substring(0, 16)
   var tribunais = [{key:'atco1',nome:'Acordão do Tribunal Constitucional'},
                     {key:'jcon',nome: 'Tribunal dos Conflitos'},
@@ -30,7 +57,7 @@ router.get('/acordaos', function(req, res, next) {
 });
 
 /* GET acordao info page. */
-router.get('/acordaos/:tribunal/:processo', function(req, res, next) {
+router.get('/acordaos/:tribunal/:processo', verificaAcesso, function(req, res, next) {
   var data = new Date().toISOString().substring(0, 16)
   var processo = decodeURIComponent(req.params.processo)
   acordaoController.getAcordao(processo)
@@ -42,7 +69,7 @@ router.get('/acordaos/:tribunal/:processo', function(req, res, next) {
     })
 });
 
-router.get('/api/acordaos', function(req, res, next) {
+router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
   const page = parseInt(req.query.start) || 1;
   const pageSize = parseInt(req.query.length) || 25;
   //const sortField = req.query.sortField || 'Processo';
