@@ -5,28 +5,32 @@ var acordaoController = require('../controllers/acordao')
 var acordaoModel = require('../models/acordao').acordaoModel
 var taxonomiaModel = require('../models/taxonomia').taxonomiaModel
 var descritoresList = null
-var userModel = require('../models/users').userModel
-var passport = require('passport')
+//var userModel = require('../models/user')
+//var passport = require('passport')
 var jwt = require('jsonwebtoken')
+var axios = require('axios')
 
 function verificaAcesso(req, res, next){
   var myToken = req.query.token || req.body.token
   if(myToken){
     jwt.verify(myToken, "tprpcw", function(e, payload){
+      console.log("payload no verifica acesso")
+      console.log(payload)
       if(e){ 
         //res.status(401).jsonp({error: e})
-        req.authStatus = false
+        req.authStatus = 'invalid'
         next()
       }
       else{
-        req.authStatus = true
+        req.authStatus = payload
+        req.user = payload
         next()
       }
     })
   }
   else{
     //res.status(401).jsonp({error: "Token inexistente!"})
-    req.authStatus = false
+    req.authStatus = 'not logged'
     next()
   }
 }
@@ -107,6 +111,8 @@ function checkTaxonomy(req, res, next) {
 router.get('/', verificaAcesso ,function(req, res, next) {
   res.redirect('/acordaos')
 });
+
+
 
 /* GET page. */
 router.get('/acordaos', checkTaxonomy, function(req, res, next) {
@@ -212,6 +218,98 @@ router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
     console.error('Error retrieving acordaos:', erro);
     res.status(500).jsonp({ error: 'Internal server error' });
   });
+});
+
+router.post('/api/insert', verificaAcesso, function(req, res, next) {
+  if (req.user.level == "admin") {
+  const entryData = req.body;
+
+  const newEntry = new acordaoModel(entryData);
+
+  newEntry.save((error) => {
+    if (error) {
+      // Validation failed or other error occurred, return an error response
+      return res.status(400).json({ error: error.message });
+    }
+
+    // Entry saved successfully
+    return res.status(201).json({ message: 'Entry saved successfully' });
+  });
+  }else{
+    return res.status(403).json({ error: 'Forbidden. User does not have permission.' });
+  }
+
+});
+
+router.get('/signup', function(req, res) {
+  axios.get('http://localhost:4445/api/user/?token=' + req.cookies.token)
+      .then(u => {
+        res.render('signup-form', {level: u.data.level})
+      })
+      .catch(e => res.render('error', {error: e}))
+
+});
+
+/* GET login page. */
+router.get('/login', verificaAcesso ,function(req, res, next) {
+  res.render('login', {level: req.authStatus})
+});
+
+/* GET register. */
+router.get('/register', verificaAcesso ,function(req, res, next) {
+  res.render('register', {level: req.authStatus })
+});
+
+
+router.post('/register', function(req, res) {
+  req.body.level = "user"
+  console.log(req.body)
+  axios.post('http://localhost:4444/users/register', req.body)
+    .then(dados => {
+        res.redirect("/login")
+    })
+    .catch(e => {
+      console.log(e)
+      if(e.response.data.message){
+        res.render('register', {message: e.response.data.message});
+      }
+      else{
+        res.render('error', {error: e})
+      }
+    }) 
+        
+});
+
+router.get('/login', function(req, res) {
+  res.render('login-form');
+});
+
+router.post('/login', function(req, res) {
+  console.log("login: body")
+  console.log(req.body)
+  axios.post('http://localhost:4444/users/login?token=' + req.cookies.token, req.body)   
+    .then(dados => {
+      res.cookie('token', dados.data.token, {
+        expires: new Date(Date.now() + '1d'),
+        secure: false, // set to true if your using https
+        httpOnly: true
+      })
+      res.redirect('/')
+    })
+    .catch(e => {
+      console.log(e.response)
+      if(e.response.status == 401 || e.response.status == 400){
+        res.render('login', {message: "Wrong credentials!"})
+      }
+      else{
+        res.render('error', {error: e})
+      }
+    })
+});
+
+router.get('/logout', function(req, res) {
+  res.clearCookie('token');
+  res.redirect('/acordaos');
 });
 
 module.exports = router;
