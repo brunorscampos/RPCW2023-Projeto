@@ -5,6 +5,35 @@ var acordaoController = require('../controllers/acordao')
 var acordaoModel = require('../models/acordao').acordaoModel
 var taxonomiaModel = require('../models/taxonomia').taxonomiaModel
 var descritoresList = null
+//var userModel = require('../models/user')
+//var passport = require('passport')
+var jwt = require('jsonwebtoken')
+var axios = require('axios')
+
+function verificaAcesso(req, res, next){
+  var myToken = req.query.token || req.body.token
+  if(myToken){
+    jwt.verify(myToken, "tprpcw", function(e, payload){
+      console.log("payload no verifica acesso")
+      console.log(payload)
+      if(e){ 
+        //res.status(401).jsonp({error: e})
+        req.authStatus = 'invalid'
+        next()
+      }
+      else{
+        req.authStatus = payload
+        req.user = payload
+        next()
+      }
+    })
+  }
+  else{
+    //res.status(401).jsonp({error: "Token inexistente!"})
+    req.authStatus = 'not logged'
+    next()
+  }
+}
 
 const tribunais = [{key:'atco1',nome:'Acordão do Tribunal Constitucional'},
                     {key:'jcon',nome: 'Tribunal dos Conflitos'},
@@ -79,12 +108,14 @@ function checkTaxonomy(req, res, next) {
 }
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', verificaAcesso ,function(req, res, next) {
   res.redirect('/acordaos')
 });
 
+
+
 /* GET page. */
-router.get('/acordaos', checkTaxonomy, function(req, res, next) {
+router.get('/acordaos', checkTaxonomy, verificaAcesso, function(req, res, next) {
   var data = new Date().toISOString().substring(0, 16)
   var tribunal = (req.query.tribunal) ? ((typeof req.query.tribunal === 'string') ? [req.query.tribunal] : req.query.tribunal) : []
   const keywords = req.query.keywords
@@ -95,23 +126,23 @@ router.get('/acordaos', checkTaxonomy, function(req, res, next) {
   const date_end = req.query.date_end
   res.render('index', {d: data,query:querystring.stringify(req.query),tribunais:tribunais,
     tribunal:tribunal,keywords:keywords,processo:processo,relator:relator,
-    descritores:descritores,date_start:date_start,date_end:date_end});
+    descritores:descritores,date_start:date_start,date_end:date_end, status: req.authStatus});
 });
 
 /* GET acordao info page. */
-router.get('/acordaos/:tribunal/:processo', function(req, res, next) {
+router.get('/acordaos/:tribunal/:processo', verificaAcesso, function(req, res, next) {
   var data = new Date().toISOString().substring(0, 16)
   var processo = decodeURIComponent(req.params.processo)
   acordaoController.getAcordao(processo)
     .then(acord => {
-      res.render('acordao', { acord:acord.toObject(), d: data });
+      res.render('acordao', { acord:acord.toObject(), d: data ,status: req.authStatus});
     })
     .catch(erro => {
-      res.render('error', {error: erro, message: "Erro na obtenção dos acordaos"})
+      res.render('error', {error: erro, message: "Erro na obtenção dos acordaos", status: req.authStatus})
     })
 });
 
-router.get('/api/acordaos', function(req, res, next) {
+router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
   const start = parseInt(req.query.start) || 0
   const pageSize = parseInt(req.query.length) || 10
   //const sortField = req.query.sortField || 'Processo';
@@ -187,6 +218,90 @@ router.get('/api/acordaos', function(req, res, next) {
     console.error('Error retrieving acordaos:', erro);
     res.status(500).jsonp({ error: 'Internal server error' });
   });
+});
+
+router.post('/api/insert', verificaAcesso, function(req, res, next) {
+  if (req.user.level == "admin") {
+  const entryData = req.body;
+
+  const newEntry = new acordaoModel(entryData);
+
+  newEntry.save((error) => {
+    if (error) {
+      // Validation failed or other error occurred, return an error response
+      return res.status(400).json({ error: error.message });
+    }
+
+    // Entry saved successfully
+    return res.status(201).json({ message: 'Entry saved successfully' });
+  });
+  }else{
+    return res.status(403).json({ error: 'Forbidden. User does not have permission.' });
+  }
+
+});
+
+
+/* GET login page. */
+router.get('/login', verificaAcesso ,function(req, res, next) {
+  res.render('login', {status: req.authStatus})
+});
+
+/* GET register. */
+router.get('/register', verificaAcesso ,function(req, res, next) {
+  res.render('register', {status: req.authStatus })
+});
+
+
+router.post('/register', function(req, res) {
+  req.body.level = "user"
+  console.log(req.body)
+  axios.post('http://localhost:4444/users/register', req.body)
+    .then(dados => {
+        res.redirect("/login")
+    })
+    .catch(e => {
+      console.log(e)
+      if(e.response.data.message){
+        res.render('register', {message: e.response.data.message, status: req.authStatus});
+      }
+      else{
+        res.render('error', {error: e, status: req.authStatus})
+      }
+    }) 
+        
+});
+
+router.get('/login', function(req, res) {
+  res.render('login-form');
+});
+
+router.post('/login', function(req, res) {
+  console.log("login: body")
+  console.log(req.body)
+  axios.post('http://localhost:4444/users/login?token=' + req.cookies.token, req.body)   
+    .then(dados => {
+      res.cookie('token', dados.data.token, {
+        expires: new Date(Date.now() + '1d'),
+        secure: false, // set to true if your using https
+        httpOnly: true
+      })
+      res.redirect('/')
+    })
+    .catch(e => {
+      console.log(e.response)
+      if(e.response.status == 401 || e.response.status == 400){
+        res.render('login', {message: "Wrong credentials!", status: req.authStatus})
+      }
+      else{
+        res.render('error', {error: e, status: req.authStatus})
+      }
+    })
+});
+
+router.get('/logout', function(req, res) {
+  res.clearCookie('token');
+  res.redirect('/acordaos');
 });
 
 module.exports = router;
