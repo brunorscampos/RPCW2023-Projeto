@@ -115,7 +115,7 @@ router.get('/', verificaAcesso ,function(req, res, next) {
 
 
 /* GET page. */
-router.get('/acordaos', checkTaxonomy, function(req, res, next) {
+router.get('/acordaos', checkTaxonomy, verificaAcesso, function(req, res, next) {
   var data = new Date().toISOString().substring(0, 16)
   var tribunal = (req.query.tribunal) ? ((typeof req.query.tribunal === 'string') ? [req.query.tribunal] : req.query.tribunal) : []
   const keywords = req.query.keywords
@@ -126,7 +126,7 @@ router.get('/acordaos', checkTaxonomy, function(req, res, next) {
   const date_end = req.query.date_end
   res.render('index', {d: data,query:querystring.stringify(req.query),tribunais:tribunais,
     tribunal:tribunal,keywords:keywords,processo:processo,relator:relator,
-    descritores:descritores,date_start:date_start,date_end:date_end});
+    descritores:descritores,date_start:date_start,date_end:date_end, status: req.authStatus});
 });
 
 /* GET acordao info page. */
@@ -135,10 +135,10 @@ router.get('/acordaos/:tribunal/:processo', verificaAcesso, function(req, res, n
   var processo = decodeURIComponent(req.params.processo)
   acordaoController.getAcordao(processo)
     .then(acord => {
-      res.render('acordao', { acord:acord.toObject(), d: data });
+      res.render('acordao', { acord:acord.toObject(), d: data ,status: req.authStatus});
     })
     .catch(erro => {
-      res.render('error', {error: erro, message: "Erro na obtenção dos acordaos"})
+      res.render('error', {error: erro, message: "Erro na obtenção dos acordaos", status: req.authStatus})
     })
 });
 
@@ -241,23 +241,15 @@ router.post('/api/insert', verificaAcesso, function(req, res, next) {
 
 });
 
-router.get('/signup', function(req, res) {
-  axios.get('http://localhost:4445/api/user/?token=' + req.cookies.token)
-      .then(u => {
-        res.render('signup-form', {level: u.data.level})
-      })
-      .catch(e => res.render('error', {error: e}))
-
-});
 
 /* GET login page. */
 router.get('/login', verificaAcesso ,function(req, res, next) {
-  res.render('login', {level: req.authStatus})
+  res.render('login', {status: req.authStatus})
 });
 
 /* GET register. */
 router.get('/register', verificaAcesso ,function(req, res, next) {
-  res.render('register', {level: req.authStatus })
+  res.render('register', {status: req.authStatus })
 });
 
 
@@ -271,10 +263,10 @@ router.post('/register', function(req, res) {
     .catch(e => {
       console.log(e)
       if(e.response.data.message){
-        res.render('register', {message: e.response.data.message});
+        res.render('register', {message: e.response.data.message, status: req.authStatus});
       }
       else{
-        res.render('error', {error: e})
+        res.render('error', {error: e, status: req.authStatus})
       }
     }) 
         
@@ -299,10 +291,10 @@ router.post('/login', function(req, res) {
     .catch(e => {
       console.log(e.response)
       if(e.response.status == 401 || e.response.status == 400){
-        res.render('login', {message: "Wrong credentials!"})
+        res.render('login', {message: "Wrong credentials!", status: req.authStatus})
       }
       else{
-        res.render('error', {error: e})
+        res.render('error', {error: e, status: req.authStatus})
       }
     })
 });
