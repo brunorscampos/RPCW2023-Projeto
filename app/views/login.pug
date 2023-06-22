@@ -16,24 +16,16 @@ block content
     .w3-card-4
       header.w3-container.w3-blue
         .w3-left
-          h1 Login
-        if (level=='not logged' || level=='invalid')
-          .w3-right
-            h3
-              a(href='/register') Sign Up
-              |  |     
-              a(href='/login') Login
-        else 
-          .w3-right
-              h3        
-                a(href='/logout') Logout
-  form(action="/login", method="POST")
+          h1 
+            i.fa.fa-home.clickable(onclick="window.location='/'" style='cursor:pointer;padding-right:15px;') 
+            | Login
+  form(action="/login", method="POST" style="padding:15px;width:30%;")
     label(for="username") Username:
-    input(type="text", id="username", name="username")
+    input.w3-input.w3-border(type="text", id="username", name="username")
     br
     label(for="password") Password:
-    input(type="password", id="password", name="password")
+    input.w3-input.w3-border(type="password", id="password", name="password")
     br
-    input(type="submit", value="Login")
-  p Don't have an account? 
-    a(href="/register") Register here.  
+    input.w3-btn.w3-blue(type="submit", value="Login")
+    p Don't have an account? 
+      a(href="/register") Register here.  

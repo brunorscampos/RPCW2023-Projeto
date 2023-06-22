@@ -4,7 +4,6 @@ import json
 
 client = MongoClient('mongodb://localhost:27017')
 db = client['RPCW_TP']
-#source_collection = db['acordaos']
 target_collection = db['taxonomia']
 
 def diacritic_insensitive_regex(string):
@@ -62,8 +61,7 @@ for doc in target_collection.find({}, {"name": 1, "parent": 1}):
     if id % 200 == 0:
         print(id)
     
-with open('filled_descs.json', 'w', encoding='utf-8') as json_file:
+with open('taxonomia.json', 'w', encoding='utf-8') as json_file:
     json.dump(filled_documents, json_file, indent=4, ensure_ascii=False)
 
 client.close()
-

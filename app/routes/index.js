@@ -11,9 +11,9 @@ var jwt = require('jsonwebtoken')
 var axios = require('axios')
 
 function verificaAcesso(req, res, next){
-  var myToken = req.query.token || req.body.token
+  var myToken = req.query.token || req.body.token || req.cookies.token
   if(myToken){
-    jwt.verify(myToken, "tprpcw", function(e, payload){
+    jwt.verify(myToken, "TPRPCW", function(e, payload){
       console.log("payload no verifica acesso")
       console.log(payload)
       if(e){ 
@@ -124,6 +124,7 @@ router.get('/acordaos', checkTaxonomy, verificaAcesso, function(req, res, next) 
   const descritores = req.query.descritores
   const date_start = req.query.date_start
   const date_end = req.query.date_end
+  console.log(req.authStatus)
   res.render('index', {d: data,query:querystring.stringify(req.query),tribunais:tribunais,
     tribunal:tribunal,keywords:keywords,processo:processo,relator:relator,
     descritores:descritores,date_start:date_start,date_end:date_end, status: req.authStatus});

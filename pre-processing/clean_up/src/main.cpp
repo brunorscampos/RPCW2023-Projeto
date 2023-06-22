@@ -12,7 +12,7 @@
 
 
 static size_t constexpr DEFAULT_CHUNK_SIZE {4096};
-static std::string constexpr DEFAULT_INPUT_REC_SEP {"    },"};
+static constexpr char DEFAULT_INPUT_REC_SEP[] = "    },";
 
 static std::unordered_set<std::string> const REMOVABLE_KEYS {
     "",
@@ -7589,7 +7589,6 @@ static std::unordered_set<std::string> const REMOVABLE_KEYS {
     "Sumos",
     "Sumárias",
     "Sumário [95]",
-    "Sumário",
     "Sumários (do 1º e do 2º Juízos da PIC de Loures)",
     "Sumários",
     "Superfície Vegetal Ponderada\nSvp = A + 0.6xB+0.3xC\nSvp = 265,96 * 0+ 0 (ficha INE a (Is 296)",

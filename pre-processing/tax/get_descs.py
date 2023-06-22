@@ -1,8 +1,5 @@
 from pymongo import MongoClient
 import json
-#from bson import ObjectId
-#string_id = "60c94c49c9025e1f2c7ff6d1"
-#object_id = ObjectId(string_id)
 
 client = MongoClient('mongodb://localhost:27017')
 db = client['RPCW_TP']
@@ -19,4 +16,3 @@ with open('descs.json', 'w', encoding='utf-8') as json_file:
     json.dump(serialized_documents, json_file, indent=4, ensure_ascii=False)
 
 client.close()
-
