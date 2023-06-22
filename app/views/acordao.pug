@@ -51,5 +51,18 @@ block content
           p
             b #{key}:
             |  #{val}
+      if (status.level=='admin')
+          form(action="/api/delete", method="POST" style="width:30%;" onsubmit="return confirmAction()")
+            input(type="hidden", name="id", value=acord['_id'])
+            input.w3-btn.w3-red(type="submit", value="Delete")
+    script.
+      function confirmAction() {
+        var result = window.confirm("Are you sure you want to submit this form?");
+        if (result) {
+          return true;
+        } else {
+          return false;
+        }
+      }
     footer.w3-container.w3-blue.w3-center
       h5 Generated for RPCW2023 in #{d}

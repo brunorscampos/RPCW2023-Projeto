@@ -122,6 +122,17 @@ router.get('/acordaos', checkTaxonomy, verificaAcesso, function(req, res, next) 
     descritores:descritores,date_start:date_start,date_end:date_end, status: req.authStatus});
 });
 
+/* GET adicionar acordao page. */
+router.get('/acordaos/adicionar', verificaAcesso ,function(req, res, next) {
+  var data = new Date().toISOString().substring(0, 16)
+  if (req.user.level == 'admin'){
+    res.render('adicionarAcordao', {status: req.authStatus, d: data })
+  }
+  else{
+    res.render('error', { error: 'Forbidden. User does not have permission.' });
+  }
+});
+
 /* GET acordao info page. */
 router.get('/acordaos/:id', verificaAcesso, function(req, res, next) {
   var data = new Date().toISOString().substring(0, 16)
@@ -212,19 +223,33 @@ router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
   });
 });
 
+/* POST insert acordao. */
 router.post('/api/insert', verificaAcesso, function(req, res, next) {
   if (req.user.level == "admin") {
-    const entryData = req.body;
-    const newEntry = new acordaoModel(entryData);
+    acordaoController.addAcordao(req.body)
+      .then(acord => {
+        console.log(acord)
+        res.redirect('/')
+      })
+      .catch(erro => {
+        res.render('error', {error: erro, message: "Erro ao adicionar o acordao", status: req.authStatus})
+      })
+  }else{
+    return res.status(403).json({ error: 'Forbidden. User does not have permission.' });
+  }
+});
 
-    newEntry.save((error) => {
-      if (error) {
-        // Validation failed or other error occurred, return an error response
-        return res.status(400).json({ error: error.message });
-      }
-      // Entry saved successfully
-      return res.status(201).json({ message: 'Entry saved successfully' });
-    });
+/* POST delete acordao. */
+router.post('/api/delete', verificaAcesso, function(req, res, next) {
+  if (req.user.level == "admin") {
+    acordaoController.deleteAcordao(req.body.id)
+      .then(acord => {
+        console.log(acord)
+        res.redirect('/')
+      })
+      .catch(erro => {
+        res.render('error', {error: erro, message: "Erro ao adicionar o acordao", status: req.authStatus})
+      })
   }else{
     return res.status(403).json({ error: 'Forbidden. User does not have permission.' });
   }
@@ -274,6 +299,7 @@ router.post('/register', function(req, res) {
   console.log(req.body)
   axios.post('http://localhost:4444/users/register', req.body)
     .then(dados => {
+        console.log(dados)
         res.redirect("/login")
     })
     .catch(e => {

@@ -22,25 +22,29 @@ router.post('/register', function(req, res){
   
   else if(req.body.username.match(regex)){
     User.lookup(req.body.username)
-    .then(r => {
-      if(r == null){
-        req.body.favorites = []
-        if(req.body.level){
-          User.insertUser(req.body)
-          .then(data => res.status(201).jsonp({dados: data}))
-          .catch(e => res.status(500).jsonp({error: e}))
+      .then(r => {
+        if(r == null){
+          var data = new Date().toISOString().substring(0, 16)
+          req.body.dateCreated = data
+          req.body.lastAccessDate = data
+          req.body.favorites = []
+          if(req.body.level){
+            User.insertUser(req.body)
+              .then(data => res.status(201).jsonp({dados: data}))
+              .catch(e => res.status(500).jsonp({error: e}))
+          }
+          else{
+            //User.insertUser({username: req.body.username, password: req.body.password, level: 'producer'})
+            User.insertUser(req.body)
+              .then(data => res.status(201).jsonp({dados: data}))
+              .catch(e => res.status(500).jsonp({error: e}))
+          }
         }
         else{
-          //User.insertUser({username: req.body.username, password: req.body.password, level: 'producer'})
-          User.insertUser(req.body)
-          .then(data => res.status(201).jsonp({dados: data}))
-          .catch(e => res.status(500).jsonp({error: e}))
+          res.status(400).jsonp({message:"The username " + req.body.username + " is already taken!"})
         }
-      }
-      else{
-        res.status(400).jsonp({message:"The username " + req.body.username + " is already taken!"})
-      }
-    })
+      })
+      .catch(e => res.status(500).jsonp({error: e}))
   }
   else{
     res.status(400).jsonp({message:"Your username can only contain alphanumeric characters, dots, underscores and hyphens!"})
@@ -64,8 +68,13 @@ router.post('/login',  passport.authenticate('local'), function(req, res){
             res.status(500).jsonp({error: "Unable to generate the token: " + e}) 
           }
           else {
-            res.status(201).jsonp({token: token})
-            console.log(token)
+            var data = new Date().toISOString().substring(0, 16)
+            User.updateUserLastAccessDate(req.user, data)
+              .then(data => {
+                res.status(201).jsonp({token: token})
+                console.log(token)
+              })
+              .catch(e => res.status(500).jsonp({error: e}))
           }
       });
     }

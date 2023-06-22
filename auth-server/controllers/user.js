@@ -29,6 +29,10 @@ module.exports.updateUser = function(u){
     return User.findByIdAndUpdate({username: u.username}, u, {new: true})
 }
 
+module.exports.updateUserLastAccessDate = function(u,d){
+    return User.updateOne({username: u.username},{ $set: { lastAccessDate: d } })
+}
+
 module.exports.getUserFavorites = function(username){
     return User.findOne({username: username}, {_id:0,favorites:1})
 }

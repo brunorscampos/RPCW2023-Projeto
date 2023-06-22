@@ -1,0 +1,104 @@
+extends layout 
+
+block content
+  .w3-card-4
+    header.w3-container.w3-blue
+      .w3-left
+        h1 
+          i.fa.fa-home.clickable(onclick="window.location='/'" style='cursor:pointer;padding-right:15px;') 
+          | Adicionar Acórdão
+    .w3-container(style="padding:15px;width:60%;")
+      form(action="/api/insert", method="POST")
+        label(for="Processo") Processo:
+        input.w3-input.w3-border(type="text", id="Processo", name="Processo")
+        br
+        label(for="Nº convencional") Nº convencional:
+        input.w3-input.w3-border(type="text", id="Nº convencional", name="Nº convencional")
+        br
+        label(for="Relator") Relator:
+        input.w3-input.w3-border(type="text", id="Relator", name="Relator")
+        br
+        label(for="Descritores") Descritores:
+        input.w3-input.w3-border(type="text", id="Descritores", name="Descritores")
+        br
+        label(for="Nº de documento") Nº de documento:
+        input.w3-input.w3-border(type="text", id="Nº de documento", name="Nº de documento")
+        br
+        label(for="Apenso") Apenso:
+        input.w3-input.w3-border(type="text", id="Apenso", name="Apenso")
+        br
+        label(for="Data do Acórdão") Data do Acórdão:
+        input.w3-input.w3-border(type='date' id='Data do Acórdão' name='Data do Acórdão' min="1900-01-01" max="2099-01-01")
+        br
+        label(for="Data da decisão sumária") Data da decisão sumária:
+        input.w3-input.w3-border(type='date' id='Data da decisão sumária' name='Data da decisão sumária' min="1900-01-01" max="2099-01-01")
+        br
+        label(for="Nº único do projeto") Nº único do projeto:
+        input.w3-input.w3-border(type="text", id="Nº único do projeto", name="Nº único do projeto")
+        br
+        label(for="Votação") Votação:
+        input.w3-input.w3-border(type="text", id="Votação", name="Votação")
+        br
+        label(for="Referência de publicação") Referência de publicação:
+        input.w3-input.w3-border(type="text", id="Referência de publicação", name="Referência de publicação")
+        br
+        label(for="tribunal") Tribunal de Recurso:
+        input.w3-input.w3-border(type="text", id="tribunal", name="tribunal")
+        br
+        label(for="Processo no tribunal de recurso") Processo no tribunal de recurso:
+        input.w3-input.w3-border(type="text", id="Processo no tribunal de recurso", name="Processo no tribunal de recurso")
+        br
+        label(for="Data") Data:
+        input.w3-input.w3-border(type='date' id='Data' name='Data' min="1900-01-01" max="2099-01-01")
+        br
+        label(for="Texto integral") Texto integral:
+        input.w3-input.w3-border(type="text", id="Texto integral", name="Texto integral")
+        br
+        label(for="Recurso") Recurso:
+        input.w3-input.w3-border(type="text", id="Recurso", name="Recurso")
+        br
+        label(for="Referência processo") Referência processo:
+        input.w3-input.w3-border(type="text", id="Referência processo", name="Referência processo")
+        br
+        label(for="Privacidade") Privacidade:
+        input.w3-input.w3-border(type="text", id="Privacidade", name="Privacidade")
+        br
+        label(for="Meio processual") Meio processual:
+        input.w3-input.w3-border(type="text", id="Meio processual", name="Meio processual")
+        br
+        label(for="Decisão") Decisão:
+        input.w3-input.w3-border(type="text", id="Decisão", name="Decisão")
+        br
+        label(for="Indicações eventuais") Indicações eventuais:
+        input.w3-input.w3-border(type="text", id="Indicações eventuais", name="Indicações eventuais")
+        br
+        label(for="Área temática") Área temática:
+        input.w3-input.w3-border(type="text", id="Área temática", name="Área temática")
+        br
+        label(for="Legislação nacional") Legislação nacional:
+        input.w3-input.w3-border(type="text", id="Legislação nacional", name="Legislação nacional")
+        br
+        label(for="Legislação comunitária") Legislação comunitária:
+        input.w3-input.w3-border(type="text", id="Legislação comunitária", name="Legislação comunitária")
+        br
+        label(for="Legislação estrangeira") Legislação estrangeira:
+        input.w3-input.w3-border(type="text", id="Legislação estrangeira", name="Legislação estrangeira")
+        br
+        label(for="Jurisprudência nacional") Jurisprudência nacional:
+        input.w3-input.w3-border(type="text", id="Jurisprudência nacional", name="Jurisprudência nacional")
+        br
+        label(for="Jurisprudência internacional") Jurisprudência internacional:
+        input.w3-input.w3-border(type="text", id="Jurisprudência internacional", name="Jurisprudência internacional")
+        br
+        label(for="Jurisprudência estrangeira") Jurisprudência estrangeira:
+        input.w3-input.w3-border(type="text", id="Jurisprudência estrangeira", name="Jurisprudência estrangeira")
+        br
+        label(for="Sumário") Sumário:
+        input.w3-input.w3-border(type="text", id="Sumário", name="Sumário")
+        br
+        label(for="Decisão texto integral") Decisão texto integral:
+        input.w3-input.w3-border(type="text", id="Decisão texto integral", name="Decisão texto integral")
+        br
+        input.w3-btn.w3-blue(type="submit", value="Adicionar")
+    footer.w3-container.w3-blue.w3-center
+      h5 Generated for RPCW2023 in #{d}

@@ -7,16 +7,22 @@ block content
         h1 
           i.fa.fa-home.clickable(onclick="window.location='/'" style='cursor:pointer;padding-right:15px;') 
           | Register
-  form(action="/register", method="POST" style="padding:15px;width:30%;")
-    label(for="username") Username:
-    input.w3-input.w3-border(type="text", id="username", name="username")
-    br
-    label(for="email") Email:
-    input.w3-input.w3-border(type="email", id="email", name="email")
-    br
-    label(for="password") Password:
-    input.w3-input.w3-border(type="password", id="password", name="password")
-    br
-    input.w3-btn.w3-blue(type="submit", value="Register")
-    p Already have an account? 
-      a(href="/login") Login here.
+    .w3-container(style="padding:15px;width:30%;")
+      form(action="/register", method="POST")
+        label(for="username") Username:
+        input.w3-input.w3-border(type="text", id="username", name="username")
+        br
+        label(for="name") Nome:
+        input.w3-input.w3-border(type="text", id="name", name="name")
+        br
+        label(for="email") Email:
+        input.w3-input.w3-border(type="email", id="email", name="email")
+        br
+        label(for="password") Password:
+        input.w3-input.w3-border(type="password", id="password", name="password")
+        br
+        input.w3-btn.w3-blue(type="submit", value="Register")
+        p Already have an account? 
+          a(href="/login") Login here.
+    footer.w3-container.w3-blue.w3-center
+      h5 Generated for RPCW2023 in #{d}

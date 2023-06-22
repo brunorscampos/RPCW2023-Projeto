@@ -33,3 +33,23 @@ module.exports.getAcordao = id => {
             return erro
         })
 }
+
+module.exports.addAcordao = a => {
+    return Acordao.create(a)
+        .then(Acordao => {
+            return Acordao
+        })
+        .catch(erro => {
+            return erro
+        })
+}
+
+module.exports.deleteAcordao = id => {
+    return Acordao.deleteOne({_id:id})
+        .then(Acordao => {
+            return Acordao
+        })
+        .catch(erro => {
+            return erro
+        })
+}

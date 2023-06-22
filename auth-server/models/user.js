@@ -17,8 +17,11 @@ var favoriteSchema = new mongoose.Schema({
 var userSchema = new mongoose.Schema({
     username: { type: String, required: true },
     password: { type: String, required: true },
+    name: String,
     email: { type: String, required: false},
     level: String,
+    dateCreated: String,
+    lastAccessDate: String,
     favorites: [favoriteSchema]
   });
 
