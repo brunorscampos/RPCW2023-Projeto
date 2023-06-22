@@ -1,0 +1,93 @@
+extends layout
+
+block content
+  style.
+    #myTable tbody tr:hover {
+      cursor: pointer;
+    }
+    #myTable td {
+      font-size: 12px; /* Adjust the font size to your preference */
+    }
+    .scrollable-text {
+      max-height: 150px; /* Set the desired height of the scrollable area */
+      overflow: auto; /* Enable scrolling when the content exceeds the height */
+    }
+  .w3-card-4
+    header.w3-container.w3-blue
+      h1 
+        i.fa.fa-home.clickable(onclick="window.location='/'" style='cursor:pointer;padding-right:15px;')
+        | Favorites
+        .w3-right
+          if (status=='not logged' || status=='invalid')
+            h3
+              a(href='/register') Sign Up
+              |  |     
+              a(href='/login') Login
+          else 
+            h3        
+              a(href='/logout') Logout
+    .w3-container
+      table.w3-table-all.display(id="myTable")
+        thead
+          tr
+            th Processo
+            th Tribunal
+            th Relator
+            th Data do Acordão
+            th Áreas Temáticas
+            th Descritores
+            th Sumário
+            th Descrição
+        tbody
+      - var ola = favorites;
+      script.
+        $(document).ready(function () {
+          var dataTable = $('#myTable').DataTable({
+            data:!{JSON.stringify(ola)},
+            columns: [
+              { data: 'Processo' },
+              { data: 'tribunal' },
+              { data: 'Relator', defaultContent: 'N/D' },
+              { data: 'Data do Acordão', defaultContent: 'N/D' },
+              {
+                data: null,
+                render: function (data, type, row) {
+                  var areas = []
+                  if (row['Área Temática']) areas.push(row['Área Temática'])
+                  if (row['Área Temática 1']) areas.push(row['Área Temática 1'])
+                  if (row['Área Temática 2']) areas.push(row['Área Temática 2'])
+                  var res = "N/D"
+                  if (areas.length > 0) res = areas.join(" / ")
+                  return '<div class="scrollable-text">' + res + "</div>"
+                }
+              },
+              { data: 'Descritores', defaultContent: 'N/D',
+                render: function ( data, type, row ) {
+                  var Descritores = JSON.parse(row['Descritores'])
+                  var res = Descritores ? Descritores.join(" / ") : "N/D"
+                  return '<div class="scrollable-text">' + res + "</div>";
+                } 
+              },
+              { data: 'Sumário', defaultContent: 'N/D',
+                render: function ( data, type, row ) {
+                  var res = data ? data : "N/D"
+                  return '<div class="scrollable-text">' + res + "</div>";
+                } 
+              },
+              { data: 'descricao' }
+            ],
+            responsive:true,
+            searching: false,
+            info: false
+          })
+
+          $('#myTable tbody').on('click', 'tr', function() {
+            var rowData = dataTable.row(this).data();
+            if (rowData !== undefined && rowData !== null) {
+              var id = rowData.id;
+              window.location.href = '/acordaos/' + id;
+            }
+          })
+        });
+    footer.w3-container.w3-blue.w3-center
+      h5 Generated for RPCW2023 in #{d}

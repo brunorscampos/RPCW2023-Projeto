@@ -24,8 +24,8 @@ module.exports.getAcordaoPage = (filter,page,perPage) => {
         })
 }
 
-module.exports.getAcordao = processo => {
-    return Acordao.findOne({Processo:processo})
+module.exports.getAcordao = id => {
+    return Acordao.findOne({_id:id})
         .then(acordao => {
             return acordao
         })

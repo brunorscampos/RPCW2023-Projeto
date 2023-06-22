@@ -1,18 +1,6 @@
 extends layout
 
 block content
-  header
-    style.
-      #myTable tbody tr:hover {
-        cursor: pointer;
-      }
-      #myTable td {
-        font-size: 12px; /* Adjust the font size to your preference */
-      }
-      .scrollable-text {
-        max-height: 150px; /* Set the desired height of the scrollable area */
-        overflow: auto; /* Enable scrolling when the content exceeds the height */
-      }
   .w3-card-4
     header.w3-container.w3-blue
       h1 
@@ -25,9 +13,32 @@ block content
               |  |     
               a(href='/login') Login
           else 
-            h3        
+            h3
+              a(href='/favorites') Favorites
+              |  |          
               a(href='/logout') Logout
-    .w3-container
+    .w3-container(style="padding:15px;")
+      if (status!='not logged' && status!='invalid')
+        if (!inFav)
+          form(action="/favorites/add", method="POST" style="width:30%;")
+            label(for="descricao") Descrição:
+            input.w3-input.w3-border(type="text", id="descricao", name="descricao")
+            br
+            input(type="hidden", name="id", value=acord['_id'])
+            input(type="hidden", name="Processo", value=acord['Processo'])
+            input(type="hidden", name="tribunal", value=acord['tribunal'])
+            input(type="hidden", name="Relator", value=acord['Relator'])
+            input(type="hidden", name="Data do Acordão", value=acord['Data do Acordão'])
+            input(type="hidden", name="Área Temática", value=acord['Área Temática'])
+            input(type="hidden", name="Área Temática 1", value=acord['Área Temática 1'])
+            input(type="hidden", name="Área Temática 2", value=acord['Área Temática 2'])
+            input(type="hidden", name="Descritores", value=acord['Descritores'])
+            input(type="hidden", name="Sumário", value=acord['Sumário'])
+            input.w3-btn.w3-green(type="submit", value="Add to Favorites")
+        else 
+          form(action="/favorites/remove", method="POST" style="width:30%;")
+            input(type="hidden", name="id", value=acord['_id'])
+            input.w3-btn.w3-red(type="submit", value="Remove From Favorites")
       each val, key in acord
         if Array.isArray(val)
           p

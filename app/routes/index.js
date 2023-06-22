@@ -4,11 +4,23 @@ var router = express.Router();
 var acordaoController = require('../controllers/acordao')
 var acordaoModel = require('../models/acordao').acordaoModel
 var taxonomiaModel = require('../models/taxonomia').taxonomiaModel
-var descritoresList = null
-//var userModel = require('../models/user')
-//var passport = require('passport')
 var jwt = require('jsonwebtoken')
 var axios = require('axios')
+var descritoresList = null
+const tribunais = [{key:'atco1',nome:'Acordão do Tribunal Constitucional'},
+                    {key:'jcon',nome: 'Tribunal dos Conflitos'},
+                    {key:'jdgpj',nome: 'Direção-Geral da Política de Justiça'},
+                    {key:'jsta',nome: 'Supremo Tribunal Administrativo'},
+                    {key:'jstj',nome: 'Supremo Tribunal de Justiça'},
+                    {key:'jtca',nome: 'Tribunal Central Administrativo'},
+                    {key:'jtcampca',nome: 'Tribunal Central Administrativo - Contencioso Administrativo'},
+                    {key:'jtcampct',nome: 'Tribunal Central Administrativo - Contencioso Tributário'},
+                    {key:'jtcn',nome: 'Tribunal Central Administrativo Norte'},
+                    {key:'jtrc',nome: 'Tribunal da Relação de Coimbra'},
+                    {key:'jtre',nome: 'Tribunal da Relação de Évora'},
+                    {key:'jtrg',nome: 'Tribunal da Relação de Guimarães'},
+                    {key:'jtrl',nome: 'Tribunal da Relação de Lisboa'},
+                    {key:'jtrp',nome: 'Tribunal da Relação de Porto'}]
 
 function verificaAcesso(req, res, next){
   var myToken = req.query.token || req.body.token || req.cookies.token
@@ -35,21 +47,6 @@ function verificaAcesso(req, res, next){
   }
 }
 
-const tribunais = [{key:'atco1',nome:'Acordão do Tribunal Constitucional'},
-                    {key:'jcon',nome: 'Tribunal dos Conflitos'},
-                    {key:'jdgpj',nome: 'Direção-Geral da Política de Justiça'},
-                    {key:'jsta',nome: 'Supremo Tribunal Administrativo'},
-                    {key:'jstj',nome: 'Supremo Tribunal de Justiça'},
-                    {key:'jtca',nome: 'Tribunal Central Administrativo'},
-                    {key:'jtcampca',nome: 'Tribunal Central Administrativo - Contencioso Administrativo'},
-                    {key:'jtcampct',nome: 'Tribunal Central Administrativo - Contencioso Tributário'},
-                    {key:'jtcn',nome: 'Tribunal Central Administrativo Norte'},
-                    {key:'jtrc',nome: 'Tribunal da Relação de Coimbra'},
-                    {key:'jtre',nome: 'Tribunal da Relação de Évora'},
-                    {key:'jtrg',nome: 'Tribunal da Relação de Guimarães'},
-                    {key:'jtrl',nome: 'Tribunal da Relação de Lisboa'},
-                    {key:'jtrp',nome: 'Tribunal da Relação de Porto'}]
-
 function diacriticInsensitiveRegex(string = '') {
   return string
      .replace(/[AÁÀÃÂaáàäâã]/g, '[AÁÀÃÂaáàäâã]')
@@ -63,7 +60,6 @@ function diacriticInsensitiveRegex(string = '') {
 function checkTaxonomy(req, res, next) {
   const descritores = req.query.descritores
   descritoresList = null;
-
   var filter = {}
   var projection = {}
   
@@ -78,10 +74,8 @@ function checkTaxonomy(req, res, next) {
 
     taxonomiaModel.findOne(filter,projection).then(taxonomia => {
       if (descritoresRegexConditions.length > 1 && taxonomia !== null) {
-
         var filter2 = {}
         var projection2 = {}
-
         filter2.name = { $regex: "^" + descritoresRegexConditions[1] + "$", $options: 'i'}
         filter2.parent = taxonomia._id
 
@@ -112,9 +106,7 @@ router.get('/', verificaAcesso ,function(req, res, next) {
   res.redirect('/acordaos')
 });
 
-
-
-/* GET page. */
+/* GET acordaos page. */
 router.get('/acordaos', checkTaxonomy, verificaAcesso, function(req, res, next) {
   var data = new Date().toISOString().substring(0, 16)
   var tribunal = (req.query.tribunal) ? ((typeof req.query.tribunal === 'string') ? [req.query.tribunal] : req.query.tribunal) : []
@@ -131,18 +123,30 @@ router.get('/acordaos', checkTaxonomy, verificaAcesso, function(req, res, next) 
 });
 
 /* GET acordao info page. */
-router.get('/acordaos/:tribunal/:processo', verificaAcesso, function(req, res, next) {
+router.get('/acordaos/:id', verificaAcesso, function(req, res, next) {
   var data = new Date().toISOString().substring(0, 16)
-  var processo = decodeURIComponent(req.params.processo)
-  acordaoController.getAcordao(processo)
+  var id = decodeURIComponent(req.params.id)
+  acordaoController.getAcordao(id)
     .then(acord => {
-      res.render('acordao', { acord:acord.toObject(), d: data ,status: req.authStatus});
+      if (req.authStatus!='not logged' && req.authStatus!='invalid'){
+        axios.get('http://localhost:4444/users/' + req.user.username + '/favorites/' + id)
+          .then(response => {
+            res.render('acordao', { acord:acord.toObject(), d: data, status: req.authStatus, inFav: response.data});
+          })
+          .catch(e => {
+            res.render('error', {error: e, status: req.authStatus})
+          }) 
+      }
+      else{
+        res.render('acordao', { acord:acord.toObject(), d: data, status: req.authStatus});
+      }
     })
     .catch(erro => {
-      res.render('error', {error: erro, message: "Erro na obtenção dos acordaos", status: req.authStatus})
+      res.render('error', {error: erro, message: "Erro na obtenção do acordao", status: req.authStatus})
     })
 });
 
+/* GET JQuery DataTable acordaos. */
 router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
   const start = parseInt(req.query.start) || 0
   const pageSize = parseInt(req.query.length) || 10
@@ -152,11 +156,9 @@ router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
   const keywords = req.query.keywords
   const processo = req.query.processo
   const relator = req.query.relator
-  //const descritores = req.query.descritores
   const descritores = descritoresList
   const date_start = req.query.date_start
   const date_end = req.query.date_end
-
   var filter = {}
   var projection = {Processo: 1,tribunal: 1,Relator: 1,"Data do Acordão":1,"Área Temática":1,
                     "Área Temática 1":1,"Área Temática 2":1,Descritores:1,Sumário:1}
@@ -176,14 +178,6 @@ router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
     });
     filter.$and = relatorRegexConditions 
   }
-  /*
-  if (descritores) {
-    var descritoresRegexConditions = descritores.split(" ").map(function(word) {
-      return { Descritores: { $regex: diacriticInsensitiveRegex(word), $options: 'i' } };
-    });
-    filter.$and = descritoresRegexConditions 
-  }
-  */
   if (descritores) {
     if (descritores.length == 0) res.jsonp({recordsTotal: 0,recordsFiltered: 0,start: 1,length: pageSize,data: []});
     filter.url = { $in: descritores }
@@ -193,9 +187,6 @@ router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
     if (filter["Data do Acordão"]) filter["Data do Acordão"].$lt = date_end
     else filter["Data do Acordão"] = { $lt: date_end }
   }
-
-  console.log(filter)
-  console.log(projection)
   
   acordaoModel.estimatedDocumentCount().then(recordsTotal =>{
     const skip = start
@@ -223,61 +214,37 @@ router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
 
 router.post('/api/insert', verificaAcesso, function(req, res, next) {
   if (req.user.level == "admin") {
-  const entryData = req.body;
+    const entryData = req.body;
+    const newEntry = new acordaoModel(entryData);
 
-  const newEntry = new acordaoModel(entryData);
-
-  newEntry.save((error) => {
-    if (error) {
-      // Validation failed or other error occurred, return an error response
-      return res.status(400).json({ error: error.message });
-    }
-
-    // Entry saved successfully
-    return res.status(201).json({ message: 'Entry saved successfully' });
-  });
+    newEntry.save((error) => {
+      if (error) {
+        // Validation failed or other error occurred, return an error response
+        return res.status(400).json({ error: error.message });
+      }
+      // Entry saved successfully
+      return res.status(201).json({ message: 'Entry saved successfully' });
+    });
   }else{
     return res.status(403).json({ error: 'Forbidden. User does not have permission.' });
   }
-
 });
-
 
 /* GET login page. */
 router.get('/login', verificaAcesso ,function(req, res, next) {
-  res.render('login', {status: req.authStatus})
+  var data = new Date().toISOString().substring(0, 16)
+  res.render('login', {status: req.authStatus, d: data})
 });
 
-/* GET register. */
+/* GET register page. */
 router.get('/register', verificaAcesso ,function(req, res, next) {
-  res.render('register', {status: req.authStatus })
+  var data = new Date().toISOString().substring(0, 16)
+  res.render('register', {status: req.authStatus, d: data })
 });
 
-
-router.post('/register', function(req, res) {
-  req.body.level = "user"
-  console.log(req.body)
-  axios.post('http://localhost:4444/users/register', req.body)
-    .then(dados => {
-        res.redirect("/login")
-    })
-    .catch(e => {
-      console.log(e)
-      if(e.response.data.message){
-        res.render('register', {message: e.response.data.message, status: req.authStatus});
-      }
-      else{
-        res.render('error', {error: e, status: req.authStatus})
-      }
-    }) 
-        
-});
-
-router.get('/login', function(req, res) {
-  res.render('login-form');
-});
-
+/* POST login. */
 router.post('/login', function(req, res) {
+  var data = new Date().toISOString().substring(0, 16)
   console.log("login: body")
   console.log(req.body)
   axios.post('http://localhost:4444/users/login?token=' + req.cookies.token, req.body)   
@@ -292,7 +259,7 @@ router.post('/login', function(req, res) {
     .catch(e => {
       console.log(e.response)
       if(e.response.status == 401 || e.response.status == 400){
-        res.render('login', {message: "Wrong credentials!", status: req.authStatus})
+        res.render('login', {message: "Wrong credentials!", status: req.authStatus, d: data})
       }
       else{
         res.render('error', {error: e, status: req.authStatus})
@@ -300,9 +267,67 @@ router.post('/login', function(req, res) {
     })
 });
 
+/* POST register. */
+router.post('/register', function(req, res) {
+  var data = new Date().toISOString().substring(0, 16)
+  req.body.level = "user"
+  console.log(req.body)
+  axios.post('http://localhost:4444/users/register', req.body)
+    .then(dados => {
+        res.redirect("/login")
+    })
+    .catch(e => {
+      console.log(e)
+      if(e.response.data.message){
+        res.render('register', {message: e.response.data.message, status: req.authStatus, d: data});
+      }
+      else{
+        res.render('error', {error: e, status: req.authStatus})
+      }
+    }) 
+});
+
+/* GET logout. */
 router.get('/logout', function(req, res) {
   res.clearCookie('token');
   res.redirect('/acordaos');
+});
+
+/* GET favorites. */
+router.get('/favorites', verificaAcesso, function(req, res) {
+  var data = new Date().toISOString().substring(0, 16)
+  axios.get('http://localhost:4444/users/' + req.user.username + '/favorites')
+    .then(response => {
+      var favorites = response.data.favorites
+      res.render('favorites', {favorites:favorites, d: data})
+    })
+    .catch(e => {
+      res.render('error', {error: e, status: req.authStatus})
+    }) 
+});
+
+/* POST add favorite. */
+router.post('/favorites/add', verificaAcesso, function(req, res) {
+  console.log(req.body)
+  axios.post('http://localhost:4444/users/' + req.user.username + '/favorites/add', req.body)
+    .then(dados => {
+        res.redirect("/")
+    })
+    .catch(e => {
+      res.render('error', {error: e, status: req.authStatus})
+    }) 
+});
+
+/* POST remove favorite. */
+router.post('/favorites/remove', verificaAcesso, function(req, res) {
+  console.log(req.body)
+  axios.post('http://localhost:4444/users/' + req.user.username + '/favorites/remove', req.body)
+    .then(dados => {
+        res.redirect("/")
+    })
+    .catch(e => {
+      res.render('error', {error: e, status: req.authStatus})
+    }) 
 });
 
 module.exports = router;

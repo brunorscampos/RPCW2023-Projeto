@@ -14,4 +14,3 @@ var User = new Schema({
 User.plugin(passportLocalMongoose) 
 
 module.exports = mongoose.model('user', User)
-

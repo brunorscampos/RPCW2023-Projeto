@@ -52,8 +52,7 @@ var acordaoSchema = new mongoose.Schema({
     'Tipo de Ação' : String, 
     'Área Temática' : String, 
     'Reclamações' : String, 
-    Requerente : String,
-    Favorite : Boolean
+    Requerente : String
 })
 
 var acordaoModel = mongoose.model('acordao',acordaoSchema)

@@ -1,24 +1,12 @@
 extends layout
 
 block content
-  header
-    style.
-      #myTable tbody tr:hover {
-        cursor: pointer;
-      }
-      #myTable td {
-        font-size: 12px; /* Adjust the font size to your preference */
-      }
-      .scrollable-text {
-        max-height: 150px; /* Set the desired height of the scrollable area */
-        overflow: auto; /* Enable scrolling when the content exceeds the height */
-      }
-    .w3-card-4
-      header.w3-container.w3-blue
-        .w3-left
-          h1 
-            i.fa.fa-home.clickable(onclick="window.location='/'" style='cursor:pointer;padding-right:15px;') 
-            | Login
+  .w3-card-4
+    header.w3-container.w3-blue
+      .w3-left
+        h1 
+          i.fa.fa-home.clickable(onclick="window.location='/'" style='cursor:pointer;padding-right:15px;') 
+          | Login
   form(action="/login", method="POST" style="padding:15px;width:30%;")
     label(for="username") Username:
     input.w3-input.w3-border(type="text", id="username", name="username")

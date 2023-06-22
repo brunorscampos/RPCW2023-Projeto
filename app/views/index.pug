@@ -30,13 +30,15 @@ block content
         h1 Acordãos
       if (status=='not logged' || status=='invalid')
         .w3-right
-          h3
+          h3  
             a(href='/register') Sign Up
             |  |     
             a(href='/login') Login
       else 
         .w3-right
-            h3        
+            h3 
+              a(href='/favorites') Favorites
+              |  |  
               a(href='/logout') Logout
     .w3-container
       form(action='/acordaos' method='GET')
@@ -109,7 +111,7 @@ block content
               { data: 'Descritores', defaultContent: 'N/D',
                 render: function ( data, type, row ) {
                   var res = row['Descritores'] ? row['Descritores'].join(" / ") : "N/D"
-                  return '<div class="scrollable-text">' + row['Descritores'].join(" / ") + "</div>";
+                  return '<div class="scrollable-text">' + res + "</div>";
                 } 
               },
               { data: 'Sumário', defaultContent: 'N/D',
@@ -127,9 +129,8 @@ block content
           $('#myTable tbody').on('click', 'tr', function() {
             var rowData = dataTable.row(this).data();
             if (rowData !== undefined && rowData !== null) {
-              var processo = encodeURIComponent(rowData.Processo);
-              var tribunal = rowData.tribunal;
-              window.location.href = '/acordaos/' + tribunal + '/' + processo;
+              var id = rowData._id;
+              window.location.href = '/acordaos/' + id
             }
           })
         });

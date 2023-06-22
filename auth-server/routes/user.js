@@ -2,13 +2,12 @@ var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken')
 var passport = require('passport')
-
 var User = require('../controllers/user')
 
 router.get('/', function(req, res){
   User.users()
-  .then(dados => res.status(200).jsonp({dados: dados}))
-  .catch(e => res.status(500).jsonp({error: e}))
+    .then(dados => res.status(200).jsonp({dados: dados}))
+    .catch(e => res.status(500).jsonp({error: e}))
 })
 
 router.post('/register', function(req, res){
@@ -18,7 +17,6 @@ router.post('/register', function(req, res){
   spaces = /^\s*$/g
   
   if(req.body.username.match(spaces) || req.body.password.match(spaces)){
-    
     res.status(400).jsonp({message: "Please fill up the entire form!", level: req.body.level})
   }
   
@@ -26,6 +24,7 @@ router.post('/register', function(req, res){
     User.lookup(req.body.username)
     .then(r => {
       if(r == null){
+        req.body.favorites = []
         if(req.body.level){
           User.insertUser(req.body)
           .then(data => res.status(201).jsonp({dados: data}))
@@ -46,17 +45,14 @@ router.post('/register', function(req, res){
   else{
     res.status(400).jsonp({message:"Your username can only contain alphanumeric characters, dots, underscores and hyphens!"})
   }
-  
 })
 
 router.post('/login',  passport.authenticate('local'), function(req, res){
-  
   console.log('Body: ' + req.user)
   User.lookup(req.user.username)
   .then(r => {
     if(r == null){
       res.status(400).jsonp({message:"failed to log in"})
-      
     }
     else{
       jwt.sign({ username: req.user.username, level: r.level, 
@@ -71,9 +67,37 @@ router.post('/login',  passport.authenticate('local'), function(req, res){
             res.status(201).jsonp({token: token})
             console.log(token)
           }
-        });
-      }
-    })
+      });
+    }
   })
+})
+
+router.get('/:username/favorites', function(req, res){
+  User.getUserFavorites(req.params.username)
+    .then(favorites => res.status(200).jsonp(favorites))
+    .catch(e => res.status(500).jsonp({error: e}))
+})
+
+router.post('/:username/favorites/add', function(req, res){
+  console.log(req.body)
+  User.addUserFavorite(req.params.username,req.body)
+    .then(f => res.status(200).jsonp(f))
+    .catch(e => res.status(500).jsonp({error: e}))
+})
+
+router.post('/:username/favorites/remove', function(req, res){
+  console.log(req.body)
+  User.removeUserFavorite(req.params.username,req.body)
+    .then(f => res.status(200).jsonp(f))
+    .catch(e => res.status(500).jsonp({error: e}))
+})
+
+router.get('/:username/favorites/:id', function(req, res){
+  User.getUserFavorites(req.params.username)
+    .then(result => {
+      const check = result.favorites.some((fav) => fav.id === req.params.id)
+      res.status(200).jsonp(check)
+    }).catch(e => res.status(500).jsonp({error: e}))
+})
   
-  module.exports = router;
+module.exports = router;

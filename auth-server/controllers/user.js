@@ -28,3 +28,15 @@ module.exports.removeUser = function(uname){
 module.exports.updateUser = function(u){
     return User.findByIdAndUpdate({username: u.username}, u, {new: true})
 }
+
+module.exports.getUserFavorites = function(username){
+    return User.findOne({username: username}, {_id:0,favorites:1})
+}
+
+module.exports.addUserFavorite = function(username,a){
+    return User.updateOne({username: username}, { $push: { favorites: a } })
+}
+
+module.exports.removeUserFavorite = function(username,a){
+    return User.updateOne({username: username}, { $pull: { favorites: { id: a.id } }})
+}
