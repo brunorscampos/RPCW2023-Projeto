@@ -15,7 +15,7 @@ Foi selecionado o quarto tema para o nosso projeto prático: Base de Dados de Ac
 Considerando que foram fornecidos 14 _datasets_ distintos, o grupo considerou que seria importante analisar a estrutura dos mesmos num fase inicial. Para tal, desenvolveu-se um _script_ em Perl que, dado um ou mais ficheiros JSON, iria produzir um pequeno relatório relativo às chaves presentes nos documentos de cada ficheiro, indicando a sua frequência, bem como o número total de documentos. Um exemplo de como correr este _script_ e respetivo _output_ gerado seria:
 
 ```
-	$ ./json_keys.pl file1.json file2.json
+    $ ./json_keys.pl file1.json file2.json
     $ cat summary.out
 Summary for file1.json (5895 documents):
 5895----: chave1
