@@ -1,0 +1,42 @@
+extends layout
+
+block content
+  .w3-card-4
+    header.w3-container.w3-blue
+      h1 
+        i.fa.fa-home.clickable(onclick="window.location='/'" style='cursor:pointer;padding-right:15px;')
+        | Editar #{acord['Processo']}
+        .w3-right
+          if (status=='not logged' || status=='invalid')
+            h3
+              a(href='/register') Sign Up
+              |  |     
+              a(href='/login') Login
+          else 
+            h3
+              a(href='/favorites') Favorites
+              |  |          
+              a(href='/logout') Logout
+    .w3-container(style="padding:15px;")
+      form(action="/api/edit", method="POST" onsubmit="return confirmAction()")
+        input(type="hidden", name="id", value=acord['_id'])
+        each val, key in acord 
+          if !["_id"].includes(key)
+            .w3-row(style="padding:5px;")
+              label(for=key) #{key}:
+              textarea.w3-input.w3-border(type="text", id=key, name=key onfocus='this.style.height = "";this.style.height = this.scrollHeight + "px"' oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"') #{val}
+        .w3-row.w3-right(style="padding:5px;")
+          input.w3-btn.w3-green(type="submit", value="Confirmar Edição")
+    script.
+      function confirmAction() {
+        var result = window.confirm("Are you sure you want to submit this form?");
+        if (result) {
+          var input = document.getElementById('Descritores');
+          input.value = input.value.split(',').map(item => item.trim());
+          return true;
+        } else {
+          return false;
+        }
+      }
+    footer.w3-container.w3-blue.w3-center
+      h5 Generated for RPCW2023 in #{d}

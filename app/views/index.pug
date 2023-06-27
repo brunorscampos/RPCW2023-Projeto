@@ -47,18 +47,6 @@ block content
       form(action='/acordaos' method='GET')
         .w3-row
           .w3-col.m2(style="padding:5px;")
-            label(for="tribunal") Tribunal:
-            select.w3-select.w3-border.js-tribunal-multiple(name='tribunal' multiple="multiple" value=tribunal)
-              each trib in tribunais
-                option(value=trib.key selected=tribunal.includes(trib.key)) #{trib.nome}
-          .w3-col.m2(style="padding:5px;")
-            label(for="date_star") Data Superior a:
-            input.w3-input.w3-border(type='date' id='date_start' name='date_start' min="1900-01-01" max="2099-01-01" value=date_start)
-          .w3-col.m2(style="padding:5px;")
-            label(for="date_end") Data Inferior a:
-            input.w3-input.w3-border(type='date' id='date_end' name='date_end' min="1900-01-01" max="2099-01-01" value=date_end)
-        .w3-row
-          .w3-col.m2(style="padding:5px;")
             label(for="keywords") Palavras-chave:
             input.w3-input.w3-border(type='text' id='keywords' name='keywords' placeholder='Pesquisa Livre...' value=keywords)
           .w3-col.m2(style="padding:5px;")
@@ -70,8 +58,20 @@ block content
           .w3-col.m2(style="padding:5px;")
             label(for="descritores") Descritores:
             input.w3-input.w3-border(type='text' id='descritores' name='descritores' placeholder='Pesquisar por Descritores...' value=descritores)
-        .w3-row(style="padding:5px;")
-          input.w3-btn.w3-blue(type='submit' value='Filter' onclick='return DisableNullFields();')
+        .w3-row
+          .w3-col.m2(style="padding:5px;")
+            label(for="tribunal") Tribunal:
+            select.w3-select.w3-border.js-tribunal-multiple(name='tribunal' multiple="multiple" value=tribunal)
+              each trib in tribunais
+                option(value=trib.key selected=tribunal.includes(trib.key)) #{trib.nome}
+          .w3-col.m2(style="padding:5px;")
+            label(for="date_star") Data Superior a:
+            input.w3-input.w3-border(type='date' id='date_start' name='date_start' min="1900-01-01" max="2099-01-01" value=date_start)
+          .w3-col.m2(style="padding:5px;")
+            label(for="date_end") Data Inferior a:
+            input.w3-input.w3-border(type='date' id='date_end' name='date_end' min="1900-01-01" max="2099-01-01" value=date_end)
+          .w3-col.m2(style="padding:5px;padding-top:29px;")
+            input.w3-btn.w3-blue(type='submit' value='Filter' onclick='return DisableNullFields();')
 
       table.w3-table-all.display(id="myTable")
         thead

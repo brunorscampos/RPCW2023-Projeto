@@ -44,6 +44,15 @@ module.exports.addAcordao = a => {
         })
 }
 
+module.exports.updateAcordao = (id,a) => {
+    return Acordao.updateOne({_id:id},a).then(resposta => {
+        return resposta
+    })
+    .catch(err => {
+        return err
+    })
+}
+
 module.exports.deleteAcordao = id => {
     return Acordao.deleteOne({_id:id})
         .then(Acordao => {
