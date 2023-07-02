@@ -2,6 +2,8 @@ from pymongo import MongoClient
 import re
 import json
 
+# PREENCHE A TAXONOMIA CRIADA COM make_taxonomy.py
+
 client = MongoClient('mongodb://localhost:27017')
 db = client['RPCW_TP']
 target_collection = db['taxonomia']

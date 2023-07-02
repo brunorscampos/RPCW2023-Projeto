@@ -52,9 +52,13 @@ block content
             b #{key}:
             |  #{val}
       if (status.level=='admin')
-          form(action="/api/delete", method="POST" style="width:30%;" onsubmit="return confirmAction()")
+        .w3-row(style="padding:5px;")
+          form(action="/acordaos/" + acord["_id"] + "/editar", method="GET")
+            input.w3-btn.w3-yellow(type="submit", value="Editar")
+        .w3-row(style="padding:5px;")
+          form(action="/api/delete", method="POST" onsubmit="return confirmAction()")
             input(type="hidden", name="id", value=acord['_id'])
-            input.w3-btn.w3-red(type="submit", value="Delete")
+            input.w3-btn.w3-red(type="submit", value="Eliminar")
     script.
       function confirmAction() {
         var result = window.confirm("Are you sure you want to submit this form?");

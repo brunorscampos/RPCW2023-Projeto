@@ -1,5 +1,8 @@
 from pymongo import MongoClient
 
+# CRIA A ESTRUTURA DA TAXONOMIA (VAZIA) APARTIR DA LISTA DE DESCRITORES UNICOS FINAL
+# ESTRUTURA SEGUE O MODELO DE ESTRUTURAS DE ÁRVORES COM REFERENCIA AOS NODOS PAI.
+
 client = MongoClient('mongodb://localhost:27017')
 db = client['RPCW_TP']
 collection = db['taxonomia']

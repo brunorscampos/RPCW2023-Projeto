@@ -1,6 +1,8 @@
 from pymongo import MongoClient
 import json
 
+# OBTEM A LISTA DE TODOS OS DESCRITORES UNICOS
+
 client = MongoClient('mongodb://localhost:27017')
 db = client['RPCW_TP']
 source_collection = db['acordaos']

@@ -125,7 +125,7 @@ router.get('/acordaos', checkTaxonomy, verificaAcesso, function(req, res, next) 
 /* GET adicionar acordao page. */
 router.get('/acordaos/adicionar', verificaAcesso ,function(req, res, next) {
   var data = new Date().toISOString().substring(0, 16)
-  if (req.user.level == 'admin'){
+  if (req.user && req.user.level == 'admin'){
     res.render('adicionarAcordao', {status: req.authStatus, d: data })
   }
   else{
@@ -155,6 +155,24 @@ router.get('/acordaos/:id', verificaAcesso, function(req, res, next) {
     .catch(erro => {
       res.render('error', {error: erro, message: "Erro na obtenção do acordao", status: req.authStatus})
     })
+});
+
+/* GET acordao info page. */
+router.get('/acordaos/:id/editar', verificaAcesso, function(req, res, next) {
+  var data = new Date().toISOString().substring(0, 16)
+  var id = decodeURIComponent(req.params.id)
+  if (req.user && req.user.level == 'admin'){
+    acordaoController.getAcordao(id)
+      .then(acord => {
+        res.render('editarAcordao', { acord:acord.toObject(), d: data, status: req.authStatus})
+      })
+      .catch(erro => {
+        res.render('error', {error: erro, message: "Erro na obtenção do acordao", status: req.authStatus})
+      })
+  }
+  else{
+    res.render('error', { error: 'Forbidden. User does not have permission.' });
+  }
 });
 
 /* GET JQuery DataTable acordaos. */
@@ -225,10 +243,9 @@ router.get('/api/acordaos', verificaAcesso, function(req, res, next) {
 
 /* POST insert acordao. */
 router.post('/api/insert', verificaAcesso, function(req, res, next) {
-  if (req.user.level == "admin") {
+  if (req.user && req.user.level == "admin") {
     acordaoController.addAcordao(req.body)
       .then(acord => {
-        console.log(acord)
         res.redirect('/')
       })
       .catch(erro => {
@@ -239,12 +256,27 @@ router.post('/api/insert', verificaAcesso, function(req, res, next) {
   }
 });
 
+/* POST edit acordao. */
+router.post('/api/edit', verificaAcesso, function(req, res, next) {
+  if (req.user && req.user.level == "admin") {
+    if (req.body.Descritores) req.body.Descritores = req.body.Descritores.split(',').map(x => x.trim())
+    acordaoController.updateAcordao(req.body.id,req.body)
+      .then(acord => {
+        res.redirect('/')
+      })
+      .catch(erro => {
+        res.render('error', {error: erro, message: "Erro ao editar o acordao", status: req.authStatus})
+      })
+  }else{
+    return res.status(403).json({ error: 'Forbidden. User does not have permission.' });
+  }
+});
+
 /* POST delete acordao. */
 router.post('/api/delete', verificaAcesso, function(req, res, next) {
-  if (req.user.level == "admin") {
+  if (req.user && req.user.level == "admin") {
     acordaoController.deleteAcordao(req.body.id)
       .then(acord => {
-        console.log(acord)
         res.redirect('/')
       })
       .catch(erro => {
