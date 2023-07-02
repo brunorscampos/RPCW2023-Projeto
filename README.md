@@ -10,6 +10,30 @@
 
 Foi selecionado o quarto tema para o nosso projeto prático: Base de Dados de Acórdãos. O objetivo é criar um serviço web para a organização dos conjuntos de acórdãos disponibilizados periodicamente ao público pelos diversos tribunais autónomos, oferecendo uma interface única para a consulta de informações nos acórdãos. Neste relatório, serão abordados o tratamento dos _datasets_ fornecidos, as diversas opções de filtragem de acórdãos disponibilizadas, incluindo uma taxonomia classificativa de descritores, e, por fim, as funcionalidades desenvolvidas para os utilizadores do serviço.
 
+## Rotas
+
+### Principais
+
+* ```GET /``` : Redireciona para ```/acordaos```
+* ```GET /acordaos``` : Página principal
+* ```GET /acordaos/:id``` : Página do acórdão com o ```id``` especificado
+* ```GET /acordaos/adicionar``` : Formulário para adicionar um acórdão
+* ```GET /acordaos/:id/editar``` : Formulário para editar um acórdão
+* ```GET /login``` : Formulário de login
+* ```GET /register``` : Formulário de registo
+
+### Auxiliares
+
+* ```GET /logout``` : Rota para efetuar logout
+* ```GET /api/acordaos``` : Rota utilizada pelo JQuery Datatable para obter acórdãos
+* ```POST /api/insert``` : Rota para inserção de acórdãos
+* ```POST /api/edit``` : Rota para edição de acórdãos
+* ```POST /api/delete``` : Rota para remoção de acórdãos
+* ```POST /login``` : Rota para efetuar login
+* ```POST /register``` : Rota para registo
+* ```POST /favorites/add``` : Rota para adicionar a favoritos
+* ```POST /favorites/remove``` : Rota para remover de favoritos
+
 ## Tratamento de Datasets
 
 Considerando que foram fornecidos 14 _datasets_ distintos, o grupo considerou que seria importante analisar a estrutura dos mesmos num fase inicial. Para tal, desenvolveu-se um _script_ em Perl que, dado um ou mais ficheiros JSON, iria produzir um pequeno relatório relativo às chaves presentes nos documentos de cada ficheiro, indicando a sua frequência, bem como o número total de documentos. Um exemplo de como correr este _script_ e respetivo _output_ gerado seria:
