@@ -103,7 +103,7 @@ Finalmente, disponibilizamos uma pesquisa de acórdãos utilizando a taxonomia d
 
 ## Usuários
 
-A interface web não só oferece pesquisa de acórdãos, como também disponibiliza autenticação de contas para os usuários, bem como funcionalidades adicionais para aqueles que estão autenticados.
+A interface web não só oferece pesquisa de acórdãos, como também disponibiliza autenticação de contas para os utilizadores, bem como funcionalidades adicionais para aqueles que estão autenticados.
 
 
 ### Autenticação
@@ -114,7 +114,7 @@ Para fazer _log in_ este utiliza um _token_ _jwt_ que assina com o nível de aut
 
 ### Níveis de Acesso
 
-Depois de autenticados, as operações que cada usuário pode realizar dependem do nível de acesso atribuído. Atualmente, existem dois níveis de acesso disponíveis:
+Depois de autenticados, as operações que cada utilizador pode realizar dependem do nível de acesso atribuído. Atualmente, existem dois níveis de acesso disponíveis:
 
 * Administrador: tem acesso completo a todas as funcionalidades da interface web. Isto inclui a possibilidade de adicionar, editar ou eliminar acórdãos, bem como adicioná-los aos favoritos;
 * Utilizador: tem acesso restrito apenas aos favoritos;
@@ -122,4 +122,4 @@ Depois de autenticados, as operações que cada usuário pode realizar dependem 
 
 ### Favoritos
 
-Os usuários autenticados têm a opção de adicionar acórdãos aos seus favoritos, juntamente com uma breve descrição, se desejarem. Esses acórdãos serão disponibilizados na aba de favoritos, permitindo que o usuário os acesse novamente ou os remova da lista de favoritos.
+Os utilizadores autenticados têm a opção de adicionar acórdãos aos seus favoritos, juntamente com uma breve descrição, se desejarem. Esses acórdãos serão disponibilizados na aba de favoritos, permitindo que o utilizador os acesse novamente ou os remova dessa mesma lista.
