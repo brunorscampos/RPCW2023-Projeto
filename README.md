@@ -108,7 +108,7 @@ A interface web não só oferece pesquisa de acórdãos, como também disponibil
 
 ### Autenticação
 
-Para implementar autenticação foi primeiro construído um servidor que trata de toda a informação especifica a utilizadores. Este servidor expõe rotas para fazer, _log in_, registar um utilizador e interagir com a lista de favoritos de um utilizador.
+Para implementar autenticação foi primeiro construído um servidor que trata de toda a informação específica a utilizadores. Este servidor expõe rotas para fazer, _log in_, registar um utilizador e interagir com a lista de favoritos de um utilizador.
 Para fazer _log in_ este utiliza um _token_ _jwt_ que assina com o nível de autorização do utilizador, data de criação e data de expiração.
 
 
